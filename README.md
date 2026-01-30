@@ -21,5 +21,8 @@ Isolation: When testing, specific tests can be selected for more precise testing
 
 Our system takes a Java project and scans it for design problems using a set of linter checks, where each check looks for a specific issue like a design principle violation or a bad pattern. Users run the tool and choose which project and checks they want to use, and the system then executes those checks on the code. As the checks run, the system collects any issues it finds. Once finished, it generates a simple report. This report explains what design problems were found in a clear manner.
 
+### Constraints
+Current constraints are the use of ASM and the necessity of having it as a Maven project. As we discover more constraints, we will update this section.
+
 ### Reference Architecture
 We are using the "Rich Client" Reference Architecture. The client-side part of the application will perform most of the data handling.
