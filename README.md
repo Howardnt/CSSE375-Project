@@ -7,10 +7,10 @@ Factor 1: Project Cycle
 Architectural design is being performed during development. The design focus is on performing enough structural work to satisfy the core requirements—such as implementing cursory style checks, principle violation checks, and pattern detectors—while preparing for a stable final release and video demonstration.
 
 Factor 2: Greenfield/Brownfield System
-  This is a brownfield system. Because the project relies on the provided ASM sample code and embedded JAR files via Maven, the design focus is on understanding the existing system (ASM's visitor/node structure) and extending it to accommodate custom linter logic without breaking the provided integration.
+This is a brownfield system. Because the project relies on the provided ASM sample code and embedded JAR files via Maven, the design focus is on understanding the existing system (ASM's visitor/node structure) and extending it to accommodate custom linter logic without breaking the provided integration.
 
 Factor 3: Novel Domain/Mature Domain
-  This project exists within a mature domain. Linters are well-established tools. The team will use these existing systems as guidance to research high-quality features, common UX considerations, and standard configuration settings to inform the project's own architecture.
+This project exists within a mature domain. Linters are well-established tools. The team will use these existing systems as guidance to research high-quality features, common UX considerations, and standard configuration settings to inform the project's own architecture.
 
 ### Primary Quality Attributes
 Efficiency: Users will be able to easily identify how to select design patterns, principle violations, and cursory checks to apply on their written code. It will be made to support repetitive use.
