@@ -1,6 +1,6 @@
 # Wiki Page - Planned Architecture
 
-### Define Design Purpose
+### Design Purpose
 The primary purpose of this architecture design is to create a functional, maintainable, and flexible Java Linter to assist the instructor in efficiently grading CSSE374 assignments by detecting specific design anti-patterns and principle violations.
 
 Factor 1: Project Cycle
