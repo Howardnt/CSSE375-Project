@@ -6,23 +6,17 @@
     "configurations": [
     {
         "type": "java",
-        "name": "Launch Java Program",
+        "name": "Run Linter (Skeleton)",
         "request": "launch",
-        "mainClass": "MyFirstLinter"
+        "mainClass": "rhit.csse.csse374.linter.presentation.Main",
+        "projectName": "LinterProject",
+        "args": "C:/path/to/project1 C:/path/to/project2"
     },
         {
             "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
-        },
-        {
-            "type": "java",
-            "name": "MyFirstLinter",
-            "request": "launch",
-            "mainClass": "example.MyFirstLinter",
-            "projectName": "LinterProject",
-            "args": "example.MyFirstLinter"
         }
     ]
 }

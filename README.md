@@ -1,4 +1,43 @@
-# Wiki Page - Planned Architecture
+# CSSE374 Java Design Linter
+
+This repository contains a **Maven-based Java linter skeleton** for detecting software design issues (principle violations, bad patterns, and cursory style problems) using ASM.
+
+## Quick start
+
+### Build
+
+```bash
+mvn test
+```
+
+### Run (skeleton)
+
+```bash
+mvn -q package
+java -jar target/LinterProject-1.0-rc3-jar-with-dependencies.jar C:/path/to/project1
+```
+
+Or use VS Code: `.vscode/launch.json` → **Run Linter (Skeleton)**.
+
+## Repository layout
+
+- `src/main/java/rhit/csse/csse374/linter/presentation`: **presentation layer**
+  - `Main`: CLI entry point (wires the system together)
+- `src/main/java/rhit/csse/csse374/linter/domain`: **domain layer**
+  - `LinterHandler`: central coordinator (holds lists of checks/detectors/projects)
+  - `ConvertToASM`: converts project locations into `ProjectToCheck` stubs (later: real ASM parsing)
+  - `Cursory`, `Principle`, `Pattern`: interfaces (currently empty to match UML)
+  - `cursory1..4`, `principle1..4`, and pattern detector classes: placeholder implementations
+- `src/main/java/rhit/csse/csse374/linter/data`: **data layer**
+  - `ProjectToCheck`: represents a project/codebase to lint
+  - `LinterOutputText`: report object (currently lines of text)
+- `src/main/resources/projects-to-check.txt`: placeholder for listing projects to lint during dev/demo
+- `docs/architecture`: architecture artifacts
+  - `design.puml`: hand-authored PlantUML from the team’s design
+  - `class-diagram.png`: exported diagram image (for quick viewing)
+- `examples/asm`: preserved ASM sample code (not part of Maven build)
+
+## Planned architecture (existing notes)
 
 ### Design Purpose
 The primary purpose of this architecture design is to create a functional, maintainable, and flexible Java Linter to assist the instructor in efficiently grading CSSE374 assignments by detecting specific design anti-patterns and principle violations.

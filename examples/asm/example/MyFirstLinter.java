@@ -1,3 +1,5 @@
+package example;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -6,21 +8,28 @@ import org.objectweb.asm.tree.*;
 import java.io.IOException;
 import java.util.List;
 
-// FIXME: this code has TERRIBLE DESIGN all around
+/**
+ * ASM sample code (kept as a reference example).
+ *
+ * This file is intentionally NOT part of the Maven build; it lives under `examples/`.
+ * Use it to learn the ASM APIs and experiment with reading classes before integrating
+ * the logic into the real linter pipeline under `src/main/java`.
+ *
+ * Source: provided course starter / sample linter.
+ */
+// FIXME: this code has TERRIBLE DESIGN all around (intentionally, as a teaching sample)
 public class MyFirstLinter {
-	
+
 	String[] fieldForAnalysisByThisProgram = new String[1];
-	
+
 	/**
 	 * Reads in a list of Java Classes and prints fun facts about them.
-	 * 
+	 *
 	 * For more information, read: https://asm.ow2.io/asm4-guide.pdf
-	 * 
-	 * @param args
-	 *            : the names of the classes, separated by spaces. For example:
-	 *            java example.MyFirstLinter java.lang.String
+	 *
+	 * @param args : the names of the classes, separated by spaces. For example:
+	 *             java example.MyFirstLinter java.lang.String
 	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO: Learn how to create separate Run Configurations so you can run
@@ -43,7 +52,7 @@ public class MyFirstLinter {
 			printClass(classNode);
 
 			printFields(classNode);
-			
+
 			printMethods(classNode);
 		}
 	}
@@ -72,9 +81,9 @@ public class MyFirstLinter {
 			System.out.println("	public? "
 					+ ((field.access & Opcodes.ACC_PUBLIC) != 0));
 			// TODO: how do you tell if something has package-private access? (ie no access modifiers?)
-			
+
 			// TODO: how do I write a lint check to tell if this field has a bad name?
-			
+
 			System.out.println();
 		}
 	}
@@ -132,8 +141,9 @@ public class MyFirstLinter {
 			// There are others...
 			// This list of direct known subclasses may be useful:
 			// http://asm.ow2.org/asm50/javadoc/user/org/objectweb/asm/tree/AbstractInsnNode.html
-			
+
 			// TODO: how do I write a lint check to tell if this method has a bad name?
 		}
 	}
 }
+

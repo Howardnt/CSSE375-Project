@@ -1,0 +1,83 @@
+@startuml
+package presentation{
+Class Main{
+}
+ 
+}
+ 
+package domain{
+ 
+Class LinterHandler{
+- Patters: List<Pattern>
+- Principles: List<Principle>
+- Cursories: List<Cursory>
+- Projects: List<ProjectToCheck>
+ 
++ OutputLinterResult():LinterOutputText
+}
+ 
+Class ConvertToASM{
+- ProjectLocation: List<String>
+ 
+}
+ 
+Interface Cursory{
+}
+ 
+Class cursory1 implements Cursory{
+}
+Class cursory2 implements Cursory{
+}
+Class cursory3 implements Cursory{
+}
+Class cursory4 implements Cursory{
+}
+ 
+Interface Principle{
+}
+ 
+Class principle1 implements Principle{
+}
+Class principle2 implements Principle{
+}
+Class principle3 implements Principle{
+}
+Class principle4 implements Principle{
+}
+ 
+Interface Pattern{
+}
+ 
+Class TemplatePattern implements Pattern{
+}
+Class StrategyPattern implements Pattern{
+}
+Class DecoratorPattern implements Pattern{
+}
+Class AdaptorPattern implements Pattern{
+}
+ 
+}
+ 
+package Data{
+Class ProjectToCheck{
+}
+ 
+Class LinterOutputText{
+}
+ 
+}
+ 
+Main --> ConvertToASM
+Main --> LinterHandler
+ 
+LinterHandler --> Pattern
+LinterHandler --> Principle
+LinterHandler --> Cursory
+LinterHandler --> ProjectToCheck
+ 
+ConvertToASM ..> ProjectToCheck
+LinterHandler ..> LinterOutputText
+ 
+@enduml
+

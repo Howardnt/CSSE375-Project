@@ -1,0 +1,13 @@
+# Skeleton configuration file.
+#
+# Purpose:
+# - Keep a convenient list of projects/codebases to lint during development/demo.
+# - Make it easy to run and test individual features against known sample projects.
+#
+# Format (proposed):
+# - One project path per line.
+# - Lines starting with # are comments.
+#
+# Example:
+# C:/Users/you/Git/SomeStudentProject/target/classes
+
