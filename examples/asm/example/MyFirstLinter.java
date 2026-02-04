@@ -40,10 +40,8 @@ public class MyFirstLinter {
 			// One way to read in a Java class with ASM:
 			// Step 1. ASM's ClassReader does the heavy lifting of parsing the compiled Java class.
 			ClassReader reader = new ClassReader(className);
-
 			// Step 2. ClassNode is just a data container for the parsed class
 			ClassNode classNode = new ClassNode();
-
 			// Step 3. Tell the Reader to parse the specified class and store its data in our ClassNode.
 			// EXPAND_FRAMES means: I want my code to work. (Always pass this flag.)
 			reader.accept(classNode, ClassReader.EXPAND_FRAMES);

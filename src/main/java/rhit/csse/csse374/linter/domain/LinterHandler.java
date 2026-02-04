@@ -3,6 +3,9 @@ package rhit.csse.csse374.linter.domain;
 import rhit.csse.csse374.linter.data.LinterOutputText;
 import rhit.csse.csse374.linter.data.ProjectToCheck;
 
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,9 +17,7 @@ import java.util.List;
  * - patterns (pattern detectors)
  * - principles (principle violation checks)
  * - cursories (cursory/style checks)
- * - projects (targets to lint)
- *
- * The skeleton implementation produces a basic report, but does not perform real analysis yet.
+ * - projects (targets to lint, containing parsed ClassNodes)
  */
 public class LinterHandler {
 
@@ -57,17 +58,43 @@ public class LinterHandler {
     /**
      * Matches UML operation: OutputLinterResult():LinterOutputText
      *
-     * Skeleton behavior: return a simple report describing what would be run.
+     * Runs all configured checks over all loaded classes and returns the results.
      */
     public LinterOutputText outputLinterResult() {
         LinterOutputText output = new LinterOutputText();
-        output.addLine("Linter skeleton run");
-        output.addLine("Projects: " + projects.size());
+        output.addLine("=== Linter Analysis Report ===");
+        output.addLine("");
+
+        // Count total classes loaded
+        int totalClasses = 0;
+        for (ProjectToCheck project : projects) {
+            totalClasses += project.getClassNodes().size();
+        }
+
+        output.addLine("Projects analyzed: " + projects.size());
+        output.addLine("Total classes loaded: " + totalClasses);
         output.addLine("Cursory checks: " + cursories.size());
         output.addLine("Principle checks: " + principles.size());
         output.addLine("Pattern detectors: " + patters.size());
         output.addLine("");
-        output.addLine("Next step: implement check contracts and run them over ProjectToCheck representations.");
+
+        // List loaded classes for each project
+        for (ProjectToCheck project : projects) {
+            output.addLine("Project: " + project.getProjectPath());
+            List<ClassNode> classNodes = project.getClassNodes();
+            if (classNodes.isEmpty()) {
+                output.addLine("  No .class files found");
+            } else {
+                output.addLine("  Classes loaded: " + classNodes.size());
+                for (ClassNode classNode : classNodes) {
+                    String className = Type.getObjectType(classNode.name).getClassName();
+                    output.addLine("    - " + className);
+                }
+            }
+            output.addLine("");
+        }
+
+        output.addLine("Next step: implement check contracts to analyze the loaded ClassNodes.");
         return output;
     }
 }
