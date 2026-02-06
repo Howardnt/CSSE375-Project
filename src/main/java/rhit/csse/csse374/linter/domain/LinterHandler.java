@@ -94,7 +94,29 @@ public class LinterHandler {
             output.addLine("");
         }
 
-        output.addLine("Next step: implement check contracts to analyze the loaded ClassNodes.");
+        // Run cursory checks and collect violations
+        List<String> allViolations = new ArrayList<>();
+        for (ProjectToCheck project : projects) {
+            for (ClassNode classNode : project.getClassNodes()) {
+                for (Cursory cursory : cursories) {
+                    List<String> violations = cursory.check(classNode);
+                    allViolations.addAll(violations);
+                }
+            }
+        }
+
+        // Output violations
+        output.addLine("=== Cursory Check Results ===");
+        if (allViolations.isEmpty()) {
+            output.addLine("No violations found.");
+        } else {
+            output.addLine("Violations found: " + allViolations.size());
+            for (String violation : allViolations) {
+                output.addLine("  - " + violation);
+            }
+        }
+        output.addLine("");
+
         return output;
     }
 }
