@@ -1,6 +1,6 @@
 package rhit.csse.csse374.linter.domain;
 
-import rhit.csse.csse374.linter.data.ProjectToCheck;
+import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +19,7 @@ import org.objectweb.asm.tree.ClassNode;
  * This class:
  * - Locates compiled `.class` files in the given directory (recursively)
  * - Parses bytecode using ASM into ClassNode objects
- * - Produces `ProjectToCheck` instances containing the parsed ClassNodes
+ * - Produces `ASMProject` instances containing the parsed ClassNodes
  */
 public class ConvertToASM {
 
@@ -35,14 +35,14 @@ public class ConvertToASM {
     }
 
     /**
-     * Converts project locations to ProjectToCheck objects with parsed ClassNodes.
+     * Converts project locations to ASMProject objects with parsed ClassNodes.
      * Each location should point to a directory containing compiled .class files.
      */
-    public List<ProjectToCheck> toProjectsToCheck() {
-        List<ProjectToCheck> projects = new ArrayList<>();
+    public List<ASMProject> toASMProjects() {
+        List<ASMProject> projects = new ArrayList<>();
         for (String location : projectLocation) {
             List<ClassNode> classNodes = loadClassesFromPath(location);
-            projects.add(new ProjectToCheck(location, classNodes));
+            projects.add(new ASMProject(location, classNodes));
         }
         return projects;
     }
@@ -116,4 +116,3 @@ public class ConvertToASM {
         }
     }
 }
-
