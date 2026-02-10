@@ -24,27 +24,25 @@ import org.objectweb.asm.tree.ClassNode;
 public class ConvertToASM {
 
     // Field name matches the UML attribute: "ProjectLocation: List<String>"
-    private final List<String> projectLocation;
+    private final String projectLocation;
 
-    public ConvertToASM(List<String> projectLocation) {
-        this.projectLocation = new ArrayList<>(projectLocation);
+    public ConvertToASM(String projectLocation) {
+        this.projectLocation = projectLocation;
     }
 
-    public List<String> getProjectLocation() {
-        return Collections.unmodifiableList(projectLocation);
+    public String getProjectLocation() {
+        return projectLocation;
     }
 
     /**
      * Converts project locations to ASMProject objects with parsed ClassNodes.
      * Each location should point to a directory containing compiled .class files.
      */
-    public List<ASMProject> toASMProjects() {
-        List<ASMProject> projects = new ArrayList<>();
-        for (String location : projectLocation) {
-            List<ClassNode> classNodes = loadClassesFromPath(location);
-            projects.add(new ASMProject(location, classNodes));
-        }
-        return projects;
+    public ASMProject toASMProject() {
+        ASMProject project;
+        List<ClassNode> classNodes = loadClassesFromPath(projectLocation);
+        project = new ASMProject(projectLocation, classNodes);
+        return project;
     }
 
     /**

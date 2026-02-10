@@ -1,7 +1,8 @@
 package rhit.csse.csse374.linter.domain;
 
+import rhit.csse.csse374.linter.data.ASMClass;
+import rhit.csse.csse374.linter.data.ASMProject;
 import rhit.csse.csse374.linter.data.LinterOutputText;
-import rhit.csse.csse374.linter.data.ProjectToCheck;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -22,25 +23,25 @@ import java.util.List;
 public class LinterHandler {
 
     // Field names intentionally match the UML attribute labels (including "Patters" typo).
-    private final List<Pattern> patters;
+    private final List<Pattern> patterns;
     private final List<Principle> principles;
     private final List<Cursory> cursories;
-    private final List<ProjectToCheck> projects;
+    private final ASMProject project;
 
     public LinterHandler(
             List<Pattern> patters,
             List<Principle> principles,
             List<Cursory> cursories,
-            List<ProjectToCheck> projects
+            ASMProject project
     ) {
-        this.patters = new ArrayList<>(patters);
+        this.patterns = new ArrayList<>(patters);
         this.principles = new ArrayList<>(principles);
         this.cursories = new ArrayList<>(cursories);
-        this.projects = new ArrayList<>(projects);
+        this.project = project;
     }
 
-    public List<Pattern> getPatters() {
-        return Collections.unmodifiableList(patters);
+    public List<Pattern> getPatterns() {
+        return Collections.unmodifiableList(patterns);
     }
 
     public List<Principle> getPrinciples() {
@@ -51,9 +52,7 @@ public class LinterHandler {
         return Collections.unmodifiableList(cursories);
     }
 
-    public List<ProjectToCheck> getProjects() {
-        return Collections.unmodifiableList(projects);
-    }
+    public ASMProject getProject() { return project; }
 
     /**
      * Matches UML operation: OutputLinterResult():LinterOutputText
@@ -65,34 +64,27 @@ public class LinterHandler {
         output.addLine("=== Linter Analysis Report ===");
         output.addLine("");
 
-        // Count total classes loaded
-        int totalClasses = 0;
-        for (ProjectToCheck project : projects) {
-            totalClasses += project.getClassNodes().size();
-        }
+        int totalClasses = project.getClasses().size();
 
-        output.addLine("Projects analyzed: " + projects.size());
+        output.addLine("Project analyzed.");
         output.addLine("Total classes loaded: " + totalClasses);
         output.addLine("Cursory checks: " + cursories.size());
         output.addLine("Principle checks: " + principles.size());
-        output.addLine("Pattern detectors: " + patters.size());
+        output.addLine("Pattern detectors: " + patterns.size());
         output.addLine("");
 
         // List loaded classes for each project
-        for (ProjectToCheck project : projects) {
-            output.addLine("Project: " + project.getProjectPath());
-            List<ClassNode> classNodes = project.getClassNodes();
-            if (classNodes.isEmpty()) {
-                output.addLine("  No .class files found");
-            } else {
-                output.addLine("  Classes loaded: " + classNodes.size());
-                for (ClassNode classNode : classNodes) {
-                    String className = Type.getObjectType(classNode.name).getClassName();
-                    output.addLine("    - " + className);
-                }
+        output.addLine("Project: " + project.getProjectPath());
+        List<ASMClass> classNodes = project.getClasses();
+        if (classNodes.isEmpty()) {
+            output.addLine("  No .class files found");
+        } else {
+            output.addLine("  Classes loaded: " + classNodes.size());
+            for (ASMClass classNode : classNodes) {
+                output.addLine("    - " + classNode.getClassName());
             }
-            output.addLine("");
         }
+        output.addLine("");
 
         output.addLine("Next step: implement check contracts to analyze the loaded ClassNodes.");
         return output;
