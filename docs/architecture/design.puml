@@ -13,27 +13,39 @@ Class LinterHandler{
 - Cursories: List<Cursory>
 - Projects: List<ProjectToCheck>
  
-+ OutputLinterResult():LinterOutputText
++ LinterHandler(List<Pattern>, List<Principle>, List<Cursory>, List<ProjectToCheck>)
++ getPatters(): List<Pattern>
++ getPrinciples(): List<Principle>
++ getCursories(): List<Cursory>
++ getProjects(): List<ProjectToCheck>
++ outputLinterResult(): LinterOutputText
 }
  
 Class ConvertToASM{
 - ProjectLocation: List<String>
- 
++ ConvertToASM(List<String>)
++ getProjectLocation(): List<String>
++ toProjectsToCheck(): List<ProjectToCheck>
 }
  
 Interface Cursory{
++ check(ClassNode): List<String>
 }
  
 Class cursory1 implements Cursory{
++ check(ClassNode): List<String>
 }
 Class cursory2 implements Cursory{
++ check(ClassNode): List<String>
 }
 Class cursory3 implements Cursory{
++ check(ClassNode): List<String>
 }
 Class cursory4 implements Cursory{
++ check(ClassNode): List<String>
 }
  
-Interface Principle{
+interface Principle{
 }
  
 Class principle1 implements Principle{
@@ -61,23 +73,43 @@ Class AdaptorPattern implements Pattern{
  
 package Data{
 Class ProjectToCheck{
++ ProjectToCheck(String, List<ClassNode>)
++ getClassNodes(): List<ClassNode>
++ getProjectPath(): String
 }
  
 Class LinterOutputText{
++ LinterOutputText()
++ addLine(String): void
+}
+
+Class ASMProject{
+}
+
+Class ASMClass{
+}
+Class ASMMethod{
+}
+Class ASMInstruction{
+}
+Class ASMStackValuePair{
 }
  
-}
  
 Main --> ConvertToASM
 Main --> LinterHandler
+
  
 LinterHandler --> Pattern
 LinterHandler --> Principle
 LinterHandler --> Cursory
-LinterHandler --> ProjectToCheck
+LinterHandler --> ASMProject
  
-ConvertToASM ..> ProjectToCheck
+ConvertToASM ..> ASMProject
 LinterHandler ..> LinterOutputText
- 
-@enduml
 
+ASMProject --> ASMClass
+ASMProject --> ASMMethod
+ASMProject--> ASMInstruction
+ASMProject --> ASMStackValuePair
+@enduml
