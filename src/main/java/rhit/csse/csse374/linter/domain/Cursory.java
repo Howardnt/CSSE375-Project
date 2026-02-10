@@ -17,6 +17,6 @@ public interface Cursory {
      * @param classNode the ASM ClassNode to analyze
      * @return a list of violation messages (empty if the class passes the check)
      */
-    List<String> check(ClassNode classNode);
+    List<String> runCursoryCheck(ClassNode classNode);
 }
 

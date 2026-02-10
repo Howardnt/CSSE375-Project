@@ -24,16 +24,16 @@ public class Main {
     public static void main(String[] args) {
         // --- SECTION 1: Hardcoded Test Path (Active for Testing) ---
         System.out.println("Running with hardcoded test path...");
-        List<String> projectLocations = Arrays.asList("target/classes");
-
+        // List<String> projectLocation = Arrays.asList("target/classes");
         // --- SECTION 2: Original CLI Logic (Temporarily Commented Out) ---
-        /*
+        
         if (args.length == 0) {
             System.out.println("Usage: java -jar <jar> <projectPath>");
             return;
         }
-        String projectLocation = args[0];
-        */
+        String projectLocation = "target/classes";
+        System.out.println("Running linter on project at: " + projectLocation);
+        
 
         ConvertToASM converter = new ConvertToASM(projectLocation);
 
@@ -41,8 +41,8 @@ public class Main {
 
         // Add checks manually
         List<Cursory> cursories = new ArrayList<>();
-        cursories.add(new equalsChecker());
-        cursories.add(new cursory2());
+        // cursories.add(new equalsChecker());
+        cursories.add(new PascalClassName());
         cursories.add(new cursory3());
         cursories.add(new cursory4());
 

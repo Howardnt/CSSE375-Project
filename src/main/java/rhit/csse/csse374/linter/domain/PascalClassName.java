@@ -4,6 +4,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Cursory check that verifies class names follow PascalCase naming convention.
@@ -13,11 +14,56 @@ import java.util.List;
  * - Name should only contain letters and digits (no underscores or special characters)
  * - Name should not be all uppercase (that's typically for constants)
  */
-public class PascalCaseForClassName implements Cursory {
+public class PascalClassName implements Cursory {
+
+    public static class PascalClassNameViolation implements Violation {
+        private final String fullName;
+        private final String simpleName;
+        private final String reason;
+
+        public PascalClassNameViolation(String fullName, String simpleName, String reason) {
+            this.fullName = fullName;
+            this.simpleName = simpleName;
+            this.reason = reason;
+        }
+
+        @Override
+        public String toString() {
+            String packageName = getPackageName(fullName);
+            String location = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+            return "PascalCase violation in class '" + location + "': " + reason;
+        }
+
+        private String getPackageName(String fullName) {
+            int lastSlash = fullName.lastIndexOf('/');
+            if (lastSlash < 0) {
+                return "";
+            }
+            return fullName.substring(0, lastSlash).replace('/', '.');
+        }
+    }
+
+    public static class CheckResult {
+        private final List<Violation> violations;
+
+        public CheckResult(List<Violation> violations) {
+            this.violations = violations;
+        }
+
+        public List<Violation> getViolations() {
+            return violations;
+        }
+    }
 
     @Override
     public List<String> check(ClassNode classNode) {
-        List<String> violations = new ArrayList<>();
+        return checkClass(classNode).getViolations().stream()
+                .map(Violation::toString)
+                .collect(Collectors.toList());
+    }
+
+    public CheckResult checkClass(ClassNode classNode) {
+        List<Violation> violations = new ArrayList<>();
 
         // Get the simple class name (without package)
         // Raw data format: classNode.name is the internal JVM name using slashes for package separation.
@@ -29,18 +75,18 @@ public class PascalCaseForClassName implements Cursory {
         if (simpleName.contains("$")) {
             String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
             if (!isPascalCase(outerClassName)) {
-                violations.add(buildViolationMessage(fullName, outerClassName,
+                violations.add(new PascalClassNameViolation(fullName, outerClassName,
                         "Outer class name does not follow PascalCase"));
             }
-            return violations;
+            return new CheckResult(violations);
         }
 
         if (!isPascalCase(simpleName)) {
-            violations.add(buildViolationMessage(fullName, simpleName,
+            violations.add(new PascalClassNameViolation(fullName, simpleName,
                     describeViolation(simpleName)));
         }
 
-        return violations;
+        return new CheckResult(violations);
     }
 
     /**
@@ -117,33 +163,5 @@ public class PascalCaseForClassName implements Cursory {
         }
 
         return "Class name does not follow PascalCase convention";
-    }
-
-    /**
-     * Builds a formatted violation message.
-     *
-     * @param fullName the full internal class name
-     * @param simpleName the simple class name
-     * @param reason the reason for the violation
-     * @return a formatted violation message
-     */
-    private String buildViolationMessage(String fullName, String simpleName, String reason) {
-        String packageName = getPackageName(fullName);
-        String location = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
-        return "PascalCase violation in class '" + location + "': " + reason;
-    }
-
-    /**
-     * Extracts the package name from the full internal name.
-     *
-     * @param fullName the internal name (e.g., "com/example/MyClass")
-     * @return the package name with dots (e.g., "com.example")
-     */
-    private String getPackageName(String fullName) {
-        int lastSlash = fullName.lastIndexOf('/');
-        if (lastSlash < 0) {
-            return "";
-        }
-        return fullName.substring(0, lastSlash).replace('/', '.');
     }
 }

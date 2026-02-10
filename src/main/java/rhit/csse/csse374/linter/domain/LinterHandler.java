@@ -88,12 +88,15 @@ public class LinterHandler {
 
         // Run cursory checks and collect violations
         List<String> allViolations = new ArrayList<>();
-        for (ProjectToCheck project : projects) {
-            for (ClassNode classNode : project.getClassNodes()) {
-                for (Cursory cursory : cursories) {
-                    List<String> violations = cursory.check(classNode);
-                    allViolations.addAll(violations);
-                }
+        for (ASMClass asmClass : classNodes) {
+            ClassNode classNode = asmClass.getClassNode();
+            for (Cursory cursory : cursories) {
+                List<String> violations = cursory.check(classNode);
+                allViolations.addAll(violations);
+            }
+            for (Pattern pattern : patterns) {
+                List<String> findings = pattern.check(classNode);
+                allViolations.addAll(findings);
             }
         }
 
@@ -112,4 +115,3 @@ public class LinterHandler {
         return output;
     }
 }
-
