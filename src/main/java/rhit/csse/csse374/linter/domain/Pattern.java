@@ -1,8 +1,6 @@
 package rhit.csse.csse374.linter.domain;
 
-import java.util.List;
-
-import org.objectweb.asm.tree.ClassNode;
+import rhit.csse.csse374.linter.data.ASMProject;
 
 /**
  * Domain-layer interface for a design pattern detector.
@@ -12,7 +10,5 @@ import org.objectweb.asm.tree.ClassNode;
  * project’s representation of code (ASM tree, source AST, etc.) is established.
  */
 public interface Pattern {
-
-    List<String> check(ClassNode classNode);
 }
 
