@@ -24,7 +24,7 @@ public class equalsChecker implements Cursory {
     private List<String> analysisErrors = new ArrayList<>();
 
     // Inner class to represent a violation
-    public static class EqualsViolation {
+    public static class EqualsViolation implements Violation{
         private final String className;
         private final String methodName;
         private final String type1;
@@ -37,10 +37,21 @@ public class equalsChecker implements Cursory {
             this.type2 = type2;
         }
 
-        public String getClassName() { return className; }
-        public String getMethodName() { return methodName; }
-        public String getType1() { return type1; }
-        public String getType2() { return type2; }
+        public String getClassName() {
+            return className;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public String getType1() {
+            return type1;
+        }
+
+        public String getType2() {
+            return type2;
+        }
 
         @Override
         public String toString() {
@@ -49,79 +60,25 @@ public class equalsChecker implements Cursory {
         }
     }
 
-    // Inner class to represent check results
-    public static class CheckResult {
-        private final List<EqualsViolation> violations;
-        private final int classesChecked;
-        private final int methodsChecked;
-        private final List<String> analysisErrors;
-
-        public CheckResult(List<EqualsViolation> violations, int classesChecked,
-                           int methodsChecked, List<String> analysisErrors) {
-            this.violations = violations;
-            this.classesChecked = classesChecked;
-            this.methodsChecked = methodsChecked;
-            this.analysisErrors = analysisErrors;
-        }
-
-        public boolean hasViolations() {
-            return !violations.isEmpty();
-        }
-
-        public List<EqualsViolation> getViolations() {
-            return violations;
-        }
-
-        public int getClassesChecked() {
-            return classesChecked;
-        }
-
-        public int getMethodsChecked() {
-            return methodsChecked;
-        }
-
-        public List<String> getAnalysisErrors() {
-            return analysisErrors;
-        }
-
-        public boolean hasAnalysisErrors() {
-            return !analysisErrors.isEmpty();
-        }
-
-        @Override
-        public String toString() {
-            if (violations.isEmpty()) {
-                return "No == comparison errors found in " + classesChecked +
-                        " classes (" + methodsChecked + " methods checked)";
-            } else {
-                return "Found " + violations.size() + " == comparison error(s) in " +
-                        classesChecked + " classes (" + methodsChecked + " methods checked)";
-            }
-        }
-    }
-
     /**
      * Checks a project for == comparison violations.
      *
-     * @param projectPath Path to the project being analyzed
-     * @param classNodes List of ASM ClassNode objects to check
+     * @param ASMProject project
      * @return CheckResult containing violations and statistics
      */
-    public CheckResult checkProject(String projectPath, List<ClassNode> classNodes) {
-        // Convert to ASM format
-        ASMProject asmProject = new ASMProject(projectPath, classNodes);
+    public CheckResult checkProject(ASMProject project) {
 
         classesChecked = 0;
         methodsChecked = 0;
         analysisErrors = new ArrayList<>();
 
-        List<EqualsViolation> violations = new ArrayList<>();
+        List<Violation> violations = new ArrayList<>();
 
-        for (ASMClass clazz : asmProject.getClasses()) {
+        for (ASMClass clazz : project.getClasses()) {
             violations.addAll(checkClass(clazz));
         }
 
-        return new CheckResult(violations, classesChecked, methodsChecked, analysisErrors);
+        return new CheckResult(violations, classesChecked, methodsChecked, analysisErrors, "== comparison");
     }
 
     private List<EqualsViolation> checkClass(ASMClass clazz) {
@@ -187,11 +144,7 @@ public class equalsChecker implements Cursory {
             return true;
         }
 
-        if (isCollectionType(typeName)) {
-            return true;
-        }
-
-        return false;
+        return isCollectionType(typeName);
     }
 
     private boolean isWrapperType(String typeName) {
