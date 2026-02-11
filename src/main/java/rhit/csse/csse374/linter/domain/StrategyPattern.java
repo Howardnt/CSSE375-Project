@@ -4,8 +4,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,26 +30,44 @@ public class StrategyPattern implements Pattern {
     }
 
     @Override
-    public void run(ASMProject project, LinterOutputText report) {
+    public CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        int totalClasses = project.getClasses().size();
+        int totalMethods = 0;
+
         List<ASMClass> classes = project.getClasses();
         for (ASMClass asmClass : classes) {
+            totalMethods += asmClass.getMethods().size();
+
             ClassNode classNode = asmClass.getClassNode();
             @SuppressWarnings("unchecked")
             List<MethodNode> methods = (List<MethodNode>) classNode.methods;
+
             for (MethodNode methodNode : methods) {
-                analyzeMethod(classNode, methodNode, report);
+                try {
+                    StrategyViolation v = analyzeMethod(classNode, methodNode);
+                    if (v != null) {
+                        violations.add(v);
+                    }
+                } catch (Exception e) {
+                    errors.add("Error analyzing " + classNode.name + "." + methodNode.name + ": " + e.getMessage());
+                }
             }
         }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, "Strategy Pattern");
     }
 
-    private void analyzeMethod(ClassNode classNode, MethodNode methodNode, LinterOutputText report) {
+    private StrategyViolation analyzeMethod(ClassNode classNode, MethodNode methodNode) {
         if ((methodNode.access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != 0) {
-            return;
+            return null;
         }
 
         Metrics m = collectMetrics(methodNode);
         if (m.realInsnCount < MIN_REAL_INSTRUCTIONS) {
-            return;
+            return null;
         }
 
         boolean switchTriggered = m.switchCount >= MIN_SWITCHES_FOR_HOTSPOT
@@ -62,7 +80,7 @@ public class StrategyPattern implements Pattern {
                 || m.distinctCallOwners.size() >= MIN_DISTINCT_CALL_OWNERS_BRANCH);
 
         if (!switchTriggered && !branchTriggered) {
-            return;
+            return null;
         }
 
         String qualifiedName = classNode.name + "." + methodNode.name;
@@ -70,13 +88,15 @@ public class StrategyPattern implements Pattern {
                 ? "large switch-based behavior selection"
                 : "large if/else chain with type-based behavior";
 
-        report.addLine("PATTERN: Strategy-missing hotspot in " + qualifiedName + " (" + reason + ")");
-        report.addLine("         metrics: switches=" + m.switchCount
+        String msg = "Strategy-missing hotspot in " + qualifiedName + " (" + reason + "). "
+                + "metrics: switches=" + m.switchCount
                 + ", branches=" + m.branchCount
                 + ", instanceof=" + m.instanceofCount
                 + ", distinctCallOwners=" + m.distinctCallOwners.size()
-                + ", newTypes=" + m.newTypes.size());
-        report.addLine("         suggestion: consider extracting behaviors into a Strategy interface and concrete strategy classes.");
+                + ", newTypes=" + m.newTypes.size()
+                + ". suggestion: consider extracting behaviors into a Strategy interface and concrete strategy classes.";
+
+        return new StrategyViolation(msg);
     }
 
     private Metrics collectMetrics(MethodNode methodNode) {
@@ -132,6 +152,19 @@ public class StrategyPattern implements Pattern {
         int realInsnCount = 0;
         Set<String> distinctCallOwners = new HashSet<>();
         Set<String> newTypes = new HashSet<>();
+    }
+
+    private static class StrategyViolation implements Violation {
+        private final String message;
+
+        private StrategyViolation(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return message;
+        }
     }
 }
 

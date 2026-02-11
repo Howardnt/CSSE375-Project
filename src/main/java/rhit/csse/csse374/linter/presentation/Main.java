@@ -36,7 +36,7 @@ public class Main {
         // Skeleton default configuration: create the UML-specified checks/detectors.
         List<Cursory> cursories = new ArrayList<>();
         cursories.add(new equalsChecker());
-        cursories.add(new cursory2());
+        cursories.add(new CamelCaseChecker());
         cursories.add(new cursory3());
         cursories.add(new cursory4());
 

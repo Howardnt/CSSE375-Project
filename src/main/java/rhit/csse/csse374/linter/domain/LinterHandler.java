@@ -26,12 +26,12 @@ public class LinterHandler {
     private final ASMProject project;
 
     public LinterHandler(
-            List<Pattern> patters,
+            List<Pattern> patterns,
             List<Principle> principles,
             List<Cursory> cursories,
             ASMProject project
     ) {
-        this.patterns = new ArrayList<>(patters);
+        this.patterns = new ArrayList<>(patterns);
         this.principles = new ArrayList<>(principles);
         this.cursories = new ArrayList<>(cursories);
         this.project = project;
