@@ -6,6 +6,7 @@ import rhit.csse.csse374.linter.data.ASMProject;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.Instruction;
+import rhit.csse.csse374.linter.data.LinterOutputText;
 import rhit.csse.csse374.linter.data.StackValuePair;
 
 import java.util.ArrayList;
@@ -122,6 +123,32 @@ public class equalsChecker implements Cursory {
         }
 
         return new CheckResult(violations, classesChecked, methodsChecked, analysisErrors);
+    }
+
+    @Override
+    public String name() {
+        return "EqualsReferenceComparison";
+    }
+
+    @Override
+    public void run(ASMProject project, LinterOutputText report) {
+        classesChecked = 0;
+        methodsChecked = 0;
+        analysisErrors = new ArrayList<>();
+
+        List<EqualsViolation> violations = new ArrayList<>();
+        for (ASMClass clazz : project.getClasses()) {
+            violations.addAll(checkClass(clazz));
+        }
+
+        CheckResult result = new CheckResult(violations, classesChecked, methodsChecked, analysisErrors);
+        report.addLine("CURSORY: " + result.toString());
+        for (EqualsViolation v : violations) {
+            report.addLine("         " + v.toString());
+        }
+        for (String err : analysisErrors) {
+            report.addLine("         [analysis] " + err);
+        }
     }
 
     private List<EqualsViolation> checkClass(ASMClass clazz) {

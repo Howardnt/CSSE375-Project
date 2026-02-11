@@ -9,6 +9,6 @@ package rhit.csse.csse374.linter.domain;
  * Extension point: later you can add a method (e.g., `apply(ProjectToCheck, LinterOutputText)`)
  * once your team agrees on a uniform check contract.
  */
-public interface Cursory {
+public interface Cursory extends LintCheck {
 }
 

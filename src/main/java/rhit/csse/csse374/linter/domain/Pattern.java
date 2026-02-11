@@ -7,6 +7,6 @@ package rhit.csse.csse374.linter.domain;
  * Later, add a detection API (e.g., detect(...) returning findings) once your
  * project’s representation of code (ASM tree, source AST, etc.) is established.
  */
-public interface Pattern {
+public interface Pattern extends LintCheck {
 }
 

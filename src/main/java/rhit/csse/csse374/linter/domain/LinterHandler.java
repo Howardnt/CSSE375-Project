@@ -4,9 +4,6 @@ import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMProject;
 import rhit.csse.csse374.linter.data.LinterOutputText;
 
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -86,8 +83,23 @@ public class LinterHandler {
         }
         output.addLine("");
 
-        output.addLine("Next step: implement check contracts to analyze the loaded ClassNodes.");
+        runChecksSection("Cursory checks", cursories, output);
+        runChecksSection("Principle checks", principles, output);
+        runChecksSection("Pattern detectors", patterns, output);
+
         return output;
+    }
+
+    private void runChecksSection(String sectionTitle, List<? extends LintCheck> checks, LinterOutputText output) {
+        if (checks.isEmpty()) {
+            return;
+        }
+        output.addLine("=== " + sectionTitle + " ===");
+        for (LintCheck check : checks) {
+            output.addLine("[Check] " + check.name());
+            check.run(project, output);
+            output.addLine("");
+        }
     }
 }
 
