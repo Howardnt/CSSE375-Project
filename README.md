@@ -1,41 +1,68 @@
 # CSSE374 Java Design Linter
 
-This repository contains a **Maven-based Java linter skeleton** for detecting software design issues (principle violations, bad patterns, and cursory style problems) using ASM.
+This repository contains a Java **design linter** for detecting software design issues (principle violations, bad patterns, and cursory style problems) using ASM.
 
 ## Quick start
 
-### Build
+### Run the linter checks (no Maven)
 
-```bash
-mvn test
+We added a manual compile+run script that:
+- downloads ASM jars into `lib/` if missing
+- compiles `src/main/java` + `src/test/java` into `out/`
+- runs the smoke-test runner (`ManualLintRunner`) against `out/`
+
+From the repo root (Windows):
+
+```powershell
+.\run-manual-tests.cmd
 ```
 
-### Run (skeleton)
+To lint a different compiled project (directory containing `.class` files):
 
-```bash
-mvn -q package
-java -jar target/LinterProject-1.0-rc3-jar-with-dependencies.jar C:/path/to/project1
+```powershell
+.\run-manual-tests.cmd "C:\path\to\someProject\target\classes"
 ```
 
-Or use VS Code: `.vscode/launch.json` → **Run Linter (Skeleton)**.
+### Run from VS Code / Cursor
+- Open `src/test/java/ManualLintRunner.java`
+- Click **Run** above `main()`
+- Optionally provide a program argument pointing at a compiled-classes directory
+
+### Maven (optional)
+The repo still contains a `pom.xml`, but the recommended dev workflow is the **non-Maven** script above.
 
 ## Repository layout
 
 - `src/main/java/rhit/csse/csse374/linter/presentation`: **presentation layer**
   - `Main`: CLI entry point (wires the system together)
 - `src/main/java/rhit/csse/csse374/linter/domain`: **domain layer**
-  - `LinterHandler`: central coordinator (holds lists of checks/detectors/projects)
-  - `ConvertToASM`: converts project locations into `ProjectToCheck` stubs (later: real ASM parsing)
-  - `Cursory`, `Principle`, `Pattern`: interfaces (currently empty to match UML)
-  - `cursory1..4`, `principle1..4`, and pattern detector classes: placeholder implementations
+  - `LinterHandler`: central coordinator (holds lists of checks/detectors and runs them)
+  - `ConvertToASM`: loads compiled `.class` files and parses them into ASM `ClassNode`s
+  - `LintCheck`: common check contract used by `LinterHandler`
+  - `Cursory`, `Principle`, `Pattern`: check groupings (extend `LintCheck`)
+  - `cursory2`, `principle2`, `StrategyPattern`: implemented checks (see “Implemented checks” below)
 - `src/main/java/rhit/csse/csse374/linter/data`: **data layer**
-  - `ProjectToCheck`: represents a project/codebase to lint
+  - `ASMProject` / `ASMClass` / `ASMMethod`: wrappers around ASM nodes for easier analysis
   - `LinterOutputText`: report object (currently lines of text)
 - `src/main/resources/projects-to-check.txt`: placeholder for listing projects to lint during dev/demo
 - `docs/architecture`: architecture artifacts
   - `design.puml`: hand-authored PlantUML from the team’s design
   - `class-diagram.png`: exported diagram image (for quick viewing)
 - `examples/asm`: preserved ASM sample code (not part of Maven build)
+
+## Implemented checks (ASM-based)
+
+- **Cursory**
+  - `equalsChecker`: flags suspicious `==` comparisons on reference types like `String`, wrappers, and common collections
+  - `cursory2`: flags **too many parameters** (>5) and **method too long** (>40 source lines, fallback to bytecode instruction count)
+- **Principles**
+  - `principle2`: SRP heuristic (size + low cohesion via field-sharing + dependency fan-out)
+- **Patterns**
+  - `StrategyPattern`: detects **Strategy-missing hotspots** (large switch / if-else behavior selection)
+
+## Test fixtures (compiled into `out/` by the script)
+We keep small “good/bad” example classes under `src/test/java/fixtures/` to exercise the checks.
+Run them via `run-manual-tests.cmd` or `ManualLintRunner`.
 
 ## Planned architecture
 
@@ -74,7 +101,7 @@ Isolation: When testing, specific tests can be selected for more precise testing
 Our system takes a Java project and scans it for design problems using a set of linter checks, where each check looks for a specific issue like a design principle violation or a bad pattern. Users run the tool and choose which project and checks they want to use, and the system then executes those checks on the code. As the checks run, the system collects any issues it finds. Once finished, it generates a simple report. This report explains what design problems were found in a clear manner.
 
 ### Constraints
-Current constraints are the use of ASM and the necessity of having it as a Maven project. As we discover more constraints, we will update this section.
+Current constraints are the use of ASM and the need to analyze compiled `.class` files. Maven is optional; the repo includes a non-Maven compile+run script for local testing.
 
 ### Reference Architecture
 We are using the "Rich Client" Reference Architecture. The client-side part of the application will perform most of the data handling.
