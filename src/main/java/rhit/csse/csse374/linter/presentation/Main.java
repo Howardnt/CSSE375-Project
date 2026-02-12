@@ -43,20 +43,20 @@ public class Main {
         List<Cursory> cursories = new ArrayList<>();
         cursories.add(new equalsChecker());
         cursories.add(new PascalClassName());
-        // cursories.add(new cursory3());
+        // cursories.add(new CamelCaseChecker());
         // cursories.add(new cursory4());
 
         List<Principle> principles = new ArrayList<>();
-        // principles.add(new openClosedPrinciple());
+        principles.add(new openClosedPrinciple());
         // principles.add(new principle2());
         // principles.add(new principle3());
         // principles.add(new principle4());
 
         List<Pattern> patterns = new ArrayList<>();
         patterns.add(new TemplatePattern());
-        // patterns.add(new StrategyPattern());
+        patterns.add(new StrategyPattern());
         patterns.add(new DecoratorPattern());
-        // patterns.add(new AdapterPattern());
+        patterns.add(new AdapterPattern());
 
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
 

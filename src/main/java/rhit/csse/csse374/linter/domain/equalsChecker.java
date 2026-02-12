@@ -19,7 +19,7 @@ import java.util.List;
 public class equalsChecker implements Cursory {
 
     @Override
-    public CheckResult checkProject(ASMProject project) {
+    public CheckResult runCursoryCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         int totalMethods = 0;
