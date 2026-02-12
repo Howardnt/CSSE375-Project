@@ -13,8 +13,14 @@ import java.util.List;
 
 //Jack Traversa (with Claude assistance in accordance with the requirements document)
 public class AdapterPattern implements Pattern {
+
     @Override
-    public CheckResult runPatternCheck(ASMProject project) {
+    public String name() {
+        return "AdapterPattern";
+    }
+
+    @Override
+    public CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         int totalMethods = 0;
@@ -26,9 +32,14 @@ public class AdapterPattern implements Pattern {
             try {
                 if (isAdapter(cls)) {
                     String adapteeField = getAdapteeFieldName(cls);
-                    violations.add(new AdapterViolation(
-                            cls.getClassName(),
+                    String message = String.format(
+                            "Adapter Pattern detected (adaptee field: %s)",
                             adapteeField
+                    );
+                    violations.add(new Violation(
+                            message,
+                            cls.getClassName(),
+                            "INFO"
                     ));
                 }
             } catch (Exception e) {
@@ -36,7 +47,7 @@ public class AdapterPattern implements Pattern {
             }
         }
 
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "Adapter Pattern");
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
     private boolean isAdapter(ASMClass asmClass) {
@@ -129,29 +140,4 @@ public class AdapterPattern implements Pattern {
         List<FieldNode> fields = findPotentialAdapteeFields(asmClass);
         return fields.isEmpty() ? "this should not happen" : fields.get(0).name;
     }
-
-    public static class AdapterViolation implements Violation {
-        private final String className;
-        private final String adapteeField;
-
-        public AdapterViolation(String className, String adapteeField) {
-            this.className = className;
-            this.adapteeField = adapteeField;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public String getAdapteeField() {
-            return adapteeField;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Adapter Pattern detected in %s (adaptee field: %s)",
-                    className, adapteeField);
-        }
-    }
 }
-
