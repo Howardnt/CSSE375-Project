@@ -6,49 +6,71 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import rhit.csse.csse374.linter.data.ASMClass;
+import rhit.csse.csse374.linter.data.ASMProject;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Skeleton implementation of {@link Pattern} for detecting Template Method usage/misuse.
- */
 public class TemplatePattern implements Pattern {
 
+    public static class TemplatePatternViolation implements Violation {
+        private final String className;
+        private final String methodName;
+
+        public TemplatePatternViolation(String className, String methodName) {
+            this.className = className;
+            this.methodName = methodName;
+        }
+
+        @Override
+        public String toString() {
+            return "Template Method Pattern detected in " + className.replace('/', '.') + "." + methodName;
+        }
+    }
+
     @Override
-    public List<String> check(ClassNode classNode) {
-        List<String> findings = new ArrayList<>();
+    public CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int classesChecked = 0;
+        int methodsChecked = 0;
 
-        // Template pattern usually involves an abstract class
-        if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
-            return findings;
-        }
+        for (ASMClass asmClass : project.getClasses()) {
+            ClassNode classNode = asmClass.getClassNode();
+            classesChecked++;
 
-        for (MethodNode method : classNode.methods) {
-            // The template method itself is usually concrete (not abstract)
-            if ((method.access & Opcodes.ACC_ABSTRACT) != 0) {
-                continue;
-            }
-            // Skip constructors and static initializers
-            if (method.name.startsWith("<")) {
+            if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
                 continue;
             }
 
-            if (isTemplateMethod(classNode, method)) {
-                findings.add("Template Method Pattern detected in " + classNode.name + "." + method.name);
+            for (MethodNode method : classNode.methods) {
+                if ((method.access & Opcodes.ACC_ABSTRACT) != 0) {
+                    continue;
+                }
+                if (method.name.startsWith("<")) {
+                    continue;
+                }
+
+                methodsChecked++;
+
+                if (isTemplateMethod(classNode, method)) {
+                    violations.add(new TemplatePatternViolation(classNode.name, method.name));
+                }
             }
         }
-        return findings;
+
+        return new CheckResult(violations, classesChecked, methodsChecked, errors, "Template Pattern");
     }
 
     private boolean isTemplateMethod(ClassNode classNode, MethodNode method) {
         for (AbstractInsnNode insn : method.instructions) {
             if (insn instanceof MethodInsnNode) {
                 MethodInsnNode methodInsn = (MethodInsnNode) insn;
-                // Check if the method calls another method in the same class
                 if (methodInsn.owner.equals(classNode.name)) {
-                    // Check if the called method is abstract (the hook/operation)
                     for (MethodNode m : classNode.methods) {
-                        if (m.name.equals(methodInsn.name) && m.desc.equals(methodInsn.desc) && (m.access & Opcodes.ACC_ABSTRACT) != 0) {
+                        if (m.name.equals(methodInsn.name) && m.desc.equals(methodInsn.desc)
+                                && (m.access & Opcodes.ACC_ABSTRACT) != 0) {
                             return true;
                         }
                     }

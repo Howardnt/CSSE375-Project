@@ -1,6 +1,8 @@
 package rhit.csse.csse374.linter.domain;
 
 import org.objectweb.asm.tree.ClassNode;
+import rhit.csse.csse374.linter.data.ASMClass;
+import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,50 +45,39 @@ public class PascalClassName implements Cursory {
         }
     }
 
-    public static class CheckResult {
-        private final List<Violation> violations;
-
-        public CheckResult(List<Violation> violations) {
-            this.violations = violations;
-        }
-
-        public List<Violation> getViolations() {
-            return violations;
-        }
-    }
-
     @Override
-    public List<String> check(ClassNode classNode) {
-        return checkClass(classNode).getViolations().stream()
-                .map(Violation::toString)
-                .collect(Collectors.toList());
-    }
-
-    public CheckResult checkClass(ClassNode classNode) {
+    public CheckResult runCursoryCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
+        int classesChecked = 0;
+        int methodsChecked = 0;
+        List<String> errors = new ArrayList<>();
 
-        // Get the simple class name (without package)
-        // Raw data format: classNode.name is the internal JVM name using slashes for package separation.
-        // Examples: "java/lang/String", "rhit/csse/csse374/linter/domain/PascalCaseForClassName"
-        String fullName = classNode.name;
-        String simpleName = getSimpleClassName(fullName);
+        for (ASMClass asmClass : project.getClasses()) {
+            classesChecked++;
+            ClassNode classNode = asmClass.getClassNode();
+            methodsChecked += classNode.methods.size();
 
-        // Skip anonymous or synthetic classes (e.g., "ClassName$1")
-        if (simpleName.contains("$")) {
-            String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
-            if (!isPascalCase(outerClassName)) {
-                violations.add(new PascalClassNameViolation(fullName, outerClassName,
-                        "Outer class name does not follow PascalCase"));
+            // Get the simple class name (without package)
+            String fullName = classNode.name;
+            String simpleName = getSimpleClassName(fullName);
+
+            // Skip anonymous or synthetic classes (e.g., "ClassName$1")
+            if (simpleName.contains("$")) {
+                String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
+                if (!isPascalCase(outerClassName)) {
+                    violations.add(new PascalClassNameViolation(fullName, outerClassName,
+                            "Outer class name does not follow PascalCase"));
+                }
+                continue;
             }
-            return new CheckResult(violations);
+
+            if (!isPascalCase(simpleName)) {
+                violations.add(new PascalClassNameViolation(fullName, simpleName,
+                        describeViolation(simpleName)));
+            }
         }
 
-        if (!isPascalCase(simpleName)) {
-            violations.add(new PascalClassNameViolation(fullName, simpleName,
-                    describeViolation(simpleName)));
-        }
-
-        return new CheckResult(violations);
+        return new CheckResult(violations, classesChecked, methodsChecked, errors, "PascalCase Class Name");
     }
 
     /**

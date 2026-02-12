@@ -87,26 +87,42 @@ public class LinterHandler {
         output.addLine("");
 
         // Run cursory checks and collect violations
-        List<String> allViolations = new ArrayList<>();
-        for (ASMClass asmClass : classNodes) {
-            ClassNode classNode = asmClass.getClassNode();
-            for (Cursory cursory : cursories) {
-                List<String> violations = cursory.check(classNode);
-                allViolations.addAll(violations);
-            }
-            for (Pattern pattern : patterns) {
-                List<String> findings = pattern.check(classNode);
-                allViolations.addAll(findings);
+        List<String> cursoryViolations = new ArrayList<>();
+        for (Cursory cursory : cursories) {
+            CheckResult cursoryCheckResult = cursory.runCursoryCheck(project);
+            for (Object v : cursoryCheckResult.getViolations()) {
+                cursoryViolations.add(v.toString());
             }
         }
 
-        // Output violations
+        // Run pattern checks and collect violations
+        List<String> patternViolations = new ArrayList<>();
+        for (Pattern pattern : patterns) {
+            CheckResult patternCheckResult = pattern.runPatternCheck(project);
+            for (Object v : patternCheckResult.getViolations()) {
+                patternViolations.add(v.toString());
+            }
+        }
+
+        // Output Cursory violations
         output.addLine("=== Cursory Check Results ===");
-        if (allViolations.isEmpty()) {
+        if (cursoryViolations.isEmpty()) {
             output.addLine("No violations found.");
         } else {
-            output.addLine("Violations found: " + allViolations.size());
-            for (String violation : allViolations) {
+            output.addLine("Violations found: " + cursoryViolations.size());
+            for (String violation : cursoryViolations) {
+                output.addLine("  - " + violation);
+            }
+        }
+        output.addLine("");
+
+        // Output Pattern violations
+        output.addLine("=== Pattern Check Results ===");
+        if (patternViolations.isEmpty()) {
+            output.addLine("No violations found.");
+        } else {
+            output.addLine("Violations found: " + patternViolations.size());
+            for (String violation : patternViolations) {
                 output.addLine("  - " + violation);
             }
         }

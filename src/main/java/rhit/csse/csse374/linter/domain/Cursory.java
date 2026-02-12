@@ -2,6 +2,8 @@ package rhit.csse.csse374.linter.domain;
 
 import org.objectweb.asm.tree.ClassNode;
 
+import rhit.csse.csse374.linter.data.ASMProject;
+
 import java.util.List;
 
 /**
@@ -17,6 +19,6 @@ public interface Cursory {
      * @param classNode the ASM ClassNode to analyze
      * @return a list of violation messages (empty if the class passes the check)
      */
-    List<String> runCursoryCheck(ClassNode classNode);
+    CheckResult runCursoryCheck(ASMProject project);
 }
 
