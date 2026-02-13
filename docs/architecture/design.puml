@@ -2,114 +2,145 @@
 package presentation{
 Class Main{
 }
+
+class LinterOutputText{
+}
  
 }
  
 package domain{
  
 Class LinterHandler{
-- Patters: List<Pattern>
-- Principles: List<Principle>
-- Cursories: List<Cursory>
-- Projects: List<ProjectToCheck>
+- checks: List<LintCheck>
+- project: ASMProject
  
-+ LinterHandler(List<Pattern>, List<Principle>, List<Cursory>, List<ProjectToCheck>)
-+ getPatters(): List<Pattern>
-+ getPrinciples(): List<Principle>
-+ getCursories(): List<Cursory>
-+ getProjects(): List<ProjectToCheck>
-+ outputLinterResult(): LinterOutputText
++runLinterAnalysis(): LinterResult
++runChecks(checks: List<LintCheck>): List<CheckResult>
 }
  
-Class ConvertToASM{
-- ProjectLocation: List<String>
-+ ConvertToASM(List<String>)
-+ getProjectLocation(): List<String>
-+ toProjectsToCheck(): List<ProjectToCheck>
-}
- 
-Interface Cursory{
-+ check(ClassNode): List<String>
-}
- 
-Class cursory1 implements Cursory{
-+ check(ClassNode): List<String>
-}
-Class cursory2 implements Cursory{
-+ check(ClassNode): List<String>
-}
-Class cursory3 implements Cursory{
-+ check(ClassNode): List<String>
-}
-Class cursory4 implements Cursory{
-+ check(ClassNode): List<String>
-}
- 
-interface Principle{
-}
- 
-Class principle1 implements Principle{
-}
-Class principle2 implements Principle{
-}
-Class principle3 implements Principle{
-}
-Class principle4 implements Principle{
-}
- 
-Interface Pattern{
-}
- 
-Class TemplatePattern implements Pattern{
-}
-Class StrategyPattern implements Pattern{
-}
-Class DecoratorPattern implements Pattern{
-}
-Class AdaptorPattern implements Pattern{
-}
+class ConvertToASM{
+-projectLocation: String
++toASMProject(): ASMProject
++loadClassesFromPath(path: String): List<ClassNode>
++findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
++loadClassFile(classFile: File): ClassNode
  
 }
  
-package Data{
-Class ProjectToCheck{
-+ ProjectToCheck(String, List<ClassNode>)
-+ getClassNodes(): List<ClassNode>
-+ getProjectPath(): String
+abstract class Cursory implements LintCheck{
 }
  
-Class LinterOutputText{
-+ LinterOutputText()
-+ addLine(String): void
+Class EqualsChecker extends Cursory{
+}
+Class CamelCaseChecker extends Cursory{
+}
+ 
+abstract class Principle implements LintCheck{
+}
+ 
+class OpenClosedPrinciple extends Principle{
 }
 
-Class ASMProject{
+ 
+abstract class Pattern implements LintCheck{
+}
+ 
+Class TemplatePattern extends Pattern{
+}
+Class StrategyPattern extends Pattern{
+}
+Class DecoratorPattern extends Pattern{
+}
+Class AdapterPattern extends Pattern{
 }
 
-Class ASMClass{
+interface LintCheck {
++run(project: ASMProject): CheckResult
 }
-Class ASMMethod{
+
+class Violation{
+-message: String
+-location: String
+-severity: String
 }
-Class ASMInstruction{
+
+class CheckResult{
+-violations: List<Violations>
+-classesChecked: int
+-methodsChecked: int
+-analysisErrors: List<String>
+-type: String
 }
-Class ASMStackValuePair{
+
+class LinterResult{
+-cursoryResult: List<CheckResult>
+-principleResult: List<CheckResult>
+-patternResult: List<CheckResult>
+-totalClasses: int
+-cursoryCheckCount: int
+-principleCheckCount: int
+-patternCheckCount: int
+-projectPath: String
+}
 }
  
- 
+package data{
+
+class ASMClass {
+-className: String
+-classNode: ClassNode
+-methods: List<ASMMethod>
+}
+
+class ASMMethod {
+-className: String
+-methodName: String
+-methodNode: MethodNode
+-frames: Frame
+-instructions: List<Instruction>
+-analysisSucceeded: boolean
+-analysisError: String
+}
+
+class ASMProject {
+-projectPath: String
+-classes: List<ASMClass>
+}
+
+class Instruction {
+-instruction: AbstractInsnNode
+-frame: Frame
+-index: int
+}
+
+class StackValuePair {
+-first: BasicValue
+-second: BasicValue
++eitherIsNull(): boolean
++bothHaveType(): boolean
++getFirstType(): Type
++getSecondType(): Type
++isNullValue(): boolean
+}
+}
+
+ASMProject -r-> "*" ASMClass
+ASMClass -d-> "*" ASMMethod
+ASMMethod -l-> "*" Instruction
+Instruction ..> StackValuePair
+
 Main --> ConvertToASM
 Main --> LinterHandler
+Main --> LinterOutputText
 
- 
-LinterHandler --> Pattern
-LinterHandler --> Principle
-LinterHandler --> Cursory
 LinterHandler --> ASMProject
- 
-ConvertToASM ..> ASMProject
-LinterHandler ..> LinterOutputText
+LinterHandler --> "*" LintCheck
+LinterHandler ..> LinterResult
 
-ASMProject --> ASMClass
-ASMProject --> ASMMethod
-ASMProject--> ASMInstruction
-ASMProject --> ASMStackValuePair
+CheckResult --> "*" Violation
+LinterResult --> "*" CheckResult
+
+LinterOutputText ..> LinterResult
+ 
 @enduml
+

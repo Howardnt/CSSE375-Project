@@ -12,45 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 //Jack Traversa (with Claude assistance in accordance with the requirements document)
-public class AdapterPattern implements Pattern {
+public class AdapterPattern extends Pattern {
 
-    @Override
-    public String name() {
-        return "AdapterPattern";
+    public AdapterPattern(){
+        super("Adapter");
     }
 
-    @Override
-    public CheckResult run(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int totalMethods = 0;
-        int totalClasses = project.getClasses().size();
-
-        for (ASMClass cls : project.getClasses()) {
-            totalMethods += cls.getMethods().size();
-
-            try {
-                if (isAdapter(cls)) {
-                    String adapteeField = getAdapteeFieldName(cls);
-                    String message = String.format(
-                            "Adapter Pattern detected (adaptee field: %s)",
-                            adapteeField
-                    );
-                    violations.add(new Violation(
-                            message,
-                            cls.getClassName(),
-                            "INFO"
-                    ));
-                }
-            } catch (Exception e) {
-                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
-            }
-        }
-
-        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
-    }
-
-    private boolean isAdapter(ASMClass asmClass) {
+    public boolean isPattern(ASMClass asmClass) {
         // checking that the class implements something
         if (asmClass.getClassNode().interfaces.isEmpty()){
             return false;
@@ -139,5 +107,10 @@ public class AdapterPattern implements Pattern {
     private String getAdapteeFieldName(ASMClass asmClass) {
         List<FieldNode> fields = findPotentialAdapteeFields(asmClass);
         return fields.isEmpty() ? "this should not happen" : fields.get(0).name;
+    }
+
+    @Override
+    public String name() {
+        return "Adapter Pattern";
     }
 }
