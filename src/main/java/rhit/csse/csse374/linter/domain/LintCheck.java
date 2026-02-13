@@ -13,11 +13,6 @@ import rhit.csse.csse374.linter.presentation.LinterOutputText;
 public interface LintCheck {
 
     /**
-     * Returns the human-readable name of this check.
-     */
-    String name();
-
-    /**
      * Executes this check on the given project.
      *
      * @param project The ASM project to analyze
