@@ -9,31 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Noah Howard
-public class DecoratorPattern implements Pattern {
+public class DecoratorPattern extends Pattern {
 
-    @Override
-    public CheckResult runPatternCheck(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int totalMethods = 0;
-        int totalClasses = project.getClasses().size();
-
-        for (ASMClass cls : project.getClasses()) {
-            totalMethods += cls.getMethods().size();
-            
-            try {
-                if (isDecorator(cls)) {
-                    violations.add(new PatternViolation("Decorator Pattern detected in class: " + cls.getClassName()));
-                }
-            } catch (Exception e) {
-                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
-            }
-        }
-
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "Decorator Pattern");
-    }
-
-    private boolean isDecorator(ASMClass cls) {
+    public boolean isPattern(ASMClass cls) {
         ClassNode node = cls.getClassNode();
         
         String superName = node.superName;
@@ -60,19 +38,5 @@ public class DecoratorPattern implements Pattern {
         }
         return desc;
     }
-
-    public class PatternViolation implements Violation {
-        private final String message;
-
-        public PatternViolation(String message) {
-            this.message = message;
-        }
-
-        @Override
-        public String toString() {
-            return message;
-        }
-    }
-
 }
 
