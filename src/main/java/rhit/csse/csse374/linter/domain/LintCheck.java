@@ -1,23 +1,28 @@
 package rhit.csse.csse374.linter.domain;
 
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
+import rhit.csse.csse374.linter.presentation.LinterOutputText;
 
 /**
- * Common contract for all linter checks (cursory, principle, and pattern).
+ * Base interface for all linter checks.
  *
- * This interface provides safe defaults so placeholder/skeleton checks compile:
- * - {@link #name()} defaults to the simple class name
- * - {@link #run(ASMProject, LinterOutputText)} defaults to a no-op
+ * Each check implementation (Cursory, Principle, Pattern) must:
+ * 1. Return a CheckResult containing violations and metadata
+ * 2. NOT handle output formatting
  */
 public interface LintCheck {
 
-    default String name() {
-        return getClass().getSimpleName();
-    }
+    /**
+     * Returns the human-readable name of this check.
+     */
+    String name();
 
-    default void run(ASMProject project, LinterOutputText report) {
-        // default no-op for skeleton checks
-    }
+    /**
+     * Executes this check on the given project.
+     *
+     * @param project The ASM project to analyze
+     * @return CheckResult containing violations, stats, and any errors
+     */
+    CheckResult run(ASMProject project);
 }
 

@@ -19,7 +19,12 @@ import java.util.List;
 public class equalsChecker implements Cursory {
 
     @Override
-    public CheckResult runCursoryCheck(ASMProject project) {
+    public String name() {
+        return "EqualsOperatorChecker";
+    }
+
+    @Override
+    public CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         int totalMethods = 0;
@@ -35,11 +40,11 @@ public class equalsChecker implements Cursory {
             }
         }
 
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "== comparison");
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
-    private List<EqualsViolation> checkClass(ASMClass cls) {
-        List<EqualsViolation> violations = new ArrayList<>();
+    private List<Violation> checkClass(ASMClass cls) {
+        List<Violation> violations = new ArrayList<>();
 
         for (ASMMethod method : cls.getMethods()) {
             if (!method.isAnalysisSuccessful()) {
@@ -47,7 +52,7 @@ public class equalsChecker implements Cursory {
             }
 
             for (Instruction instruction : method.getInstructions()) {
-                EqualsViolation violation = checkInstruction(instruction, method);
+                Violation violation = checkInstruction(instruction, method);
                 if (violation != null) {
                     violations.add(violation);
                 }
@@ -57,7 +62,7 @@ public class equalsChecker implements Cursory {
         return violations;
     }
 
-    private EqualsViolation checkInstruction(Instruction instruction, ASMMethod method) {
+    private Violation checkInstruction(Instruction instruction, ASMMethod method) {
         if (!instruction.isReferenceComparison()) {
             return null;
         }
@@ -74,12 +79,11 @@ public class equalsChecker implements Cursory {
             String type1Name = type1 != null ? type1.getClassName() : "unknown";
             String type2Name = type2 != null ? type2.getClassName() : "unknown";
 
-            return new EqualsViolation(
-                    method.getClassName(),
-                    method.getMethodName(),
-                    type1Name,
-                    type2Name
-            );
+            String message = "Using == to compare " + type1Name + " and " + type2Name +
+                    " (should use .equals() instead)";
+            String location = method.getClassName() + "." + method.getMethodName();
+
+            return new Violation(message, location, "WARNING");
         }
 
         return null;
@@ -114,41 +118,5 @@ public class equalsChecker implements Cursory {
                 typeName.startsWith("java/util/ArrayList") ||
                 typeName.startsWith("java/util/HashMap") ||
                 typeName.startsWith("java/util/HashSet");
-    }
-
-    public static class EqualsViolation implements Violation {
-        private final String className;
-        private final String methodName;
-        private final String type1;
-        private final String type2;
-
-        public EqualsViolation(String className, String methodName, String type1, String type2) {
-            this.className = className;
-            this.methodName = methodName;
-            this.type1 = type1;
-            this.type2 = type2;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public String getMethodName() {
-            return methodName;
-        }
-
-        public String getType1() {
-            return type1;
-        }
-
-        public String getType2() {
-            return type2;
-        }
-
-        @Override
-        public String toString() {
-            return "== comparison in " + className + "." + methodName +
-                    " (comparing " + type1 + " and " + type2 + ")";
-        }
     }
 }

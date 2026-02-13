@@ -1,21 +1,19 @@
 package rhit.csse.csse374.linter.presentation;
 
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 import rhit.csse.csse374.linter.domain.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * Presentation-layer entry point.
+ * Entry point.
  *
  * Responsibilities:
  * - Accept user input (CLI for now)
  * - Configure which projects/checks to run
- * - Invoke the domain layer
- * - Present the final report
+ * - Invoke the domain layer to run analysis
+ * - Format and present the final report
  *
  * Later, this can evolve into a richer UI (interactive CLI menu or GUI).
  */
@@ -31,15 +29,14 @@ public class Main {
             System.out.println("Usage: java -jar <jar> <projectPath>");
             return;
         }
-        String projectLocation = "target/classes";
-        System.out.println("Running linter on project at: " + projectLocation);
-        
 
+        String projectLocation = args[0];
+
+        // Load project
         ConvertToASM converter = new ConvertToASM(projectLocation);
-
         ASMProject project = converter.toASMProject();
 
-        // Add checks manually
+        // Configure checks
         List<Cursory> cursories = new ArrayList<>();
         cursories.add(new equalsChecker());
         cursories.add(new PascalClassName());
@@ -58,9 +55,13 @@ public class Main {
         patterns.add(new DecoratorPattern());
         patterns.add(new AdapterPattern());
 
+        // Domain layer: Run the analysis
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
+        LinterResult result = handler.runLinterAnalysis();
 
-        LinterOutputText output = handler.outputLinterResult();
+        // Presentation layer: Format and display the results
+        LinterOutputText output = new LinterOutputText();
+        output.formatResult(result);
         System.out.println(output);
     }
 
