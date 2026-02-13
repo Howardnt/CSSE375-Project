@@ -17,9 +17,13 @@ import rhit.csse.csse374.linter.data.ASMProject;
  */
 public abstract class Pattern implements LintCheck {
 
-    private String patternName;
+    private final String patternName;
+
+    protected Pattern(String patternName) {
+        this.patternName = patternName;
+    }
     
-    public CheckResult run(ASMProject project) {
+    public final CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         int totalMethods = 0;
@@ -37,7 +41,7 @@ public abstract class Pattern implements LintCheck {
             }
         }
 
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "Decorator Pattern");
+        return new CheckResult(violations, totalClasses, totalMethods, errors, patternName + " Pattern");
     }
 
     public abstract boolean isPattern(ASMClass cls);

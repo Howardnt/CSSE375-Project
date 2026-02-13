@@ -11,6 +11,15 @@ import java.util.List;
 // Noah Howard
 public class DecoratorPattern extends Pattern {
 
+    public DecoratorPattern() {
+        super("Decorator");
+    }
+
+    @Override
+    public String name() {
+        return "Decorator";
+    }
+
     public boolean isPattern(ASMClass cls) {
         ClassNode node = cls.getClassNode();
         
