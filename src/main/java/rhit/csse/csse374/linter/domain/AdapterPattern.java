@@ -14,6 +14,10 @@ import java.util.List;
 //Jack Traversa (with Claude assistance in accordance with the requirements document)
 public class AdapterPattern extends Pattern {
 
+    public AdapterPattern(){
+        super("Adapter Pattern");
+    }
+
     @Override
     public String name() {
         return "Adapter Pattern";
@@ -89,16 +93,15 @@ public class AdapterPattern extends Pattern {
         return false;
     }
 
-    //any adaptee should be private, final, and its own Object
+    //any adaptee should be private and its own object
     private List<FieldNode> findPotentialAdapteeFields(ASMClass asmClass) {
         List<FieldNode> candidates = new ArrayList<>();
 
         for (FieldNode field : asmClass.getClassNode().fields) {
             boolean isPrivate = (field.access & Opcodes.ACC_PRIVATE) != 0;
-            boolean isFinal = (field.access & Opcodes.ACC_FINAL) != 0;
             boolean isNonPrimitive = field.desc.startsWith("L");
 
-            if (isPrivate && isFinal && isNonPrimitive) {
+            if (isPrivate && isNonPrimitive) {
                 candidates.add(field);
             }
         }

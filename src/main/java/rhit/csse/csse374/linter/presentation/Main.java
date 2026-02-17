@@ -38,13 +38,13 @@ public class Main {
 
         // Configure checks
         List<Cursory> cursories = new ArrayList<>();
-        cursories.add(new equalsChecker());
+        cursories.add(new EqualsChecker());
         cursories.add(new PascalClassName());
         // cursories.add(new CamelCaseChecker());
         // cursories.add(new cursory4());
 
         List<Principle> principles = new ArrayList<>();
-        principles.add(new openClosedPrinciple());
+        principles.add(new OpenClosedPrinciple());
         // principles.add(new principle2());
         // principles.add(new principle3());
         // principles.add(new principle4());
