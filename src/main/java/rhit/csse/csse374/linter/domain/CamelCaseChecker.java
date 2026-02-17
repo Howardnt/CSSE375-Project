@@ -17,32 +17,11 @@ import java.util.List;
  * - Flag names containing underscores or starting with a non-lowercase letter
  * - Allow only letters/digits after the first character
  */
-public class CamelCaseChecker implements Cursory {
+public class CamelCaseChecker extends Cursory {
 
     @Override
     public String name() {
         return "CamelCaseMethodNames";
-    }
-
-    @Override
-    public CheckResult run(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int totalClasses = project.getClasses().size();
-        int totalMethods = 0;
-
-        List<ASMClass> classes = project.getClasses();
-        for (ASMClass asmClass : classes) {
-            for (ASMMethod method : asmClass.getMethods()) {
-                totalMethods++;
-                Violation v = checkMethodName(method);
-                if (v != null) {
-                    violations.add(v);
-                }
-            }
-        }
-
-        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
     private Violation checkMethodName(ASMMethod method) {
@@ -89,5 +68,17 @@ public class CamelCaseChecker implements Cursory {
         }
         return true;
     }
+
+    @Override
+public List<Violation> checkClass(ASMClass cls) {
+    List<Violation> violations = new ArrayList<>();
+    for (ASMMethod method : cls.getMethods()) {
+        Violation v = checkMethodName(method);
+        if (v != null) {
+            violations.add(v);
+        }
+    }
+    return violations;
+}
 }
 
