@@ -4,34 +4,24 @@ import rhit.csse.csse374.linter.data.ASMProject;
 import rhit.csse.csse374.linter.data.LinterOutputText;
 
 /**
- * Domain-layer interface for a design pattern detector.
+ * Domain-layer base class for a design pattern detector.
  *
- * This skeleton keeps the interface empty to match the UML exactly.
- * Later, add a detection API (e.g., detect(...) returning findings) once your
- * project’s representation of code (ASM tree, source AST, etc.) is established.
+ * Pattern is now modeled as an abstract class to provide a shared execution/reporting
+ * pipeline while still requiring concrete detectors to implement the analysis logic.
  */
-public interface Pattern extends LintCheck {
+public abstract class Pattern implements LintCheck {
 
     /**
      * Pattern detectors typically return a structured result (violations + stats).
-     * Implementors may override this; the default implementation reports "not implemented".
      */
-    default CheckResult runPatternCheck(ASMProject project) {
-        return new CheckResult(
-                java.util.Collections.emptyList(),
-                project.getClasses().size(),
-                0,
-                java.util.Collections.singletonList("runPatternCheck not implemented for " + name()),
-                "Pattern"
-        );
-    }
+    public abstract CheckResult runPatternCheck(ASMProject project);
 
     /**
      * Bridge into the common {@link LintCheck} contract so {@link LinterHandler} can run patterns
      * the same way as other checks.
      */
     @Override
-    default void run(ASMProject project, LinterOutputText report) {
+    public final void run(ASMProject project, LinterOutputText report) {
         CheckResult result = runPatternCheck(project);
         if (result == null) {
             report.addLine("PATTERN: " + name() + " returned null result");

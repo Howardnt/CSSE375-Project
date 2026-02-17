@@ -14,7 +14,7 @@ import java.util.Set;
  * Strategy check (smell detector): flags methods that look like type/mode-based behavior selection
  * (big switch / big if-else chains), and suggests considering the Strategy Pattern.
  */
-public class StrategyPattern implements Pattern {
+public class StrategyPattern extends Pattern {
 
     private static final int MIN_SWITCHES_FOR_HOTSPOT = 1;
     private static final int MIN_BRANCHES_FOR_HOTSPOT = 12;

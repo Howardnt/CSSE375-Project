@@ -4,7 +4,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 
 import java.util.*;
 
@@ -16,7 +15,7 @@ import java.util.*;
  * - cohesion (field sharing across methods, LCOM-ish)
  * - dependency fan-out (distinct external packages referenced via method calls)
  */
-public class principle2 implements Principle {
+public class singleResponsibilityPrinciple extends Pattern {
 
     private static final int MIN_PUBLIC_METHODS = 10;
     private static final int MIN_TOTAL_METHODS = 20;
@@ -30,13 +29,29 @@ public class principle2 implements Principle {
     }
 
     @Override
-    public void run(ASMProject project, LinterOutputText report) {
+    public CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        int totalClasses = project.getClasses().size();
+        int totalMethods = 0;
+
         for (ASMClass asmClass : project.getClasses()) {
-            analyzeClass(asmClass.getClassNode(), report);
+            totalMethods += asmClass.getMethods().size();
+            try {
+                SRPViolation v = analyzeClass(asmClass.getClassNode());
+                if (v != null) {
+                    violations.add(v);
+                }
+            } catch (Exception e) {
+                errors.add("Error analyzing " + asmClass.getClassName() + ": " + e.getMessage());
+            }
         }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, "Single Responsibility Principle");
     }
 
-    private void analyzeClass(ClassNode classNode, LinterOutputText report) {
+    private SRPViolation analyzeClass(ClassNode classNode) {
         @SuppressWarnings("unchecked")
         List<FieldNode> fields = (List<FieldNode>) classNode.fields;
         @SuppressWarnings("unchecked")
@@ -63,7 +78,7 @@ public class principle2 implements Principle {
 
         if (fieldCount < MIN_FIELDS
                 || (publicMethodCount < MIN_PUBLIC_METHODS && methodCount < MIN_TOTAL_METHODS)) {
-            return;
+            return null;
         }
 
         Map<MethodNode, Set<String>> fieldsByMethod = computeFieldsAccessedPerMethod(classNode, interestingMethods);
@@ -74,16 +89,17 @@ public class principle2 implements Principle {
         boolean highFanOut = dependencyPackages >= MIN_DEPENDENCY_PACKAGES;
 
         if (!lowCohesion && !highFanOut) {
-            return;
+            return null;
         }
 
-        report.addLine("PRINCIPLE: Possible SRP violation in " + classNode.name);
-        report.addLine("           fields=" + fieldCount
+        String msg = "Possible SRP violation in " + classNode.name
+                + " (fields=" + fieldCount
                 + ", publicMethods=" + publicMethodCount
-                + ", totalMethods=" + methodCount);
-        report.addLine("           cohesionDisjointRatio=" + String.format(Locale.ROOT, "%.2f", disjointRatio)
-                + ", dependencyPackages=" + dependencyPackages);
-        report.addLine("           suggestion: class likely has multiple responsibilities; consider splitting into smaller, cohesive types.");
+                + ", totalMethods=" + methodCount
+                + ", cohesionDisjointRatio=" + String.format(Locale.ROOT, "%.2f", disjointRatio)
+                + ", dependencyPackages=" + dependencyPackages
+                + "). suggestion: class likely has multiple responsibilities; consider splitting into smaller, cohesive types.";
+        return new SRPViolation(msg);
     }
 
     private Map<MethodNode, Set<String>> computeFieldsAccessedPerMethod(ClassNode classNode, List<MethodNode> methods) {
@@ -157,6 +173,19 @@ public class principle2 implements Principle {
             }
         }
         return packages.size();
+    }
+
+    private static class SRPViolation implements Violation {
+        private final String message;
+
+        private SRPViolation(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return message;
+        }
     }
 }
 

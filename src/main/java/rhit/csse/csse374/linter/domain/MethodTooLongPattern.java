@@ -7,20 +7,20 @@ import org.objectweb.asm.tree.MethodNode;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Cursory check: method too long / too many parameters.
+ * Pattern-style check: method too long / too many parameters.
  *
  * - Too many parameters: > 5
  * - Too long: > 40 distinct source lines (via LineNumberNode)
  *   Fallback if no line numbers: > 200 real bytecode instructions
  */
-public class cursory2 implements Cursory {
+public class MethodTooLongPattern extends Pattern {
 
     private static final int MAX_PARAMETERS = 5;
     private static final int MAX_SOURCE_LINES = 40;
@@ -32,23 +32,38 @@ public class cursory2 implements Cursory {
     }
 
     @Override
-    public void run(ASMProject project, LinterOutputText report) {
+    public CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        int totalClasses = project.getClasses().size();
+        int totalMethods = 0;
+
         List<ASMClass> classes = project.getClasses();
         for (ASMClass asmClass : classes) {
+            totalMethods += asmClass.getMethods().size();
             for (ASMMethod method : asmClass.getMethods()) {
-                analyzeMethod(method, report);
+                try {
+                    violations.addAll(analyzeMethod(method));
+                } catch (Exception e) {
+                    errors.add("Error analyzing " + method.getClassName() + "." + method.getMethodName() + ": " + e.getMessage());
+                }
             }
         }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, "Method Length/Parameters");
     }
 
-    private void analyzeMethod(ASMMethod method, LinterOutputText report) {
+    private List<Violation> analyzeMethod(ASMMethod method) {
+        List<Violation> violations = new ArrayList<>();
+
         MethodNode methodNode = method.getMethodNode();
         if (methodNode == null) {
-            return;
+            return violations;
         }
 
         if ((methodNode.access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != 0) {
-            return;
+            return violations;
         }
 
         int paramCount = org.objectweb.asm.Type.getArgumentTypes(methodNode.desc).length;
@@ -61,21 +76,23 @@ public class cursory2 implements Cursory {
         boolean tooLongByBytecode = (lineCount == 0) && realInsnCount > MAX_BYTECODE_INSTRUCTIONS_FALLBACK;
 
         if (!tooManyParams && !tooLongByLines && !tooLongByBytecode) {
-            return;
+            return violations;
         }
 
         String qualifiedName = method.getClassName() + "." + method.getMethodName();
         if (tooManyParams) {
-            report.addLine("CURSORY: TooManyParameters in " + qualifiedName
-                    + " (params=" + paramCount + ", max=" + MAX_PARAMETERS + ")");
+            violations.add(new SimpleViolation("TooManyParameters in " + qualifiedName
+                    + " (params=" + paramCount + ", max=" + MAX_PARAMETERS + ")"));
         }
         if (tooLongByLines) {
-            report.addLine("CURSORY: MethodTooLong (by lines) in " + qualifiedName
-                    + " (lines=" + lineCount + ", max=" + MAX_SOURCE_LINES + ")");
+            violations.add(new SimpleViolation("MethodTooLong (by lines) in " + qualifiedName
+                    + " (lines=" + lineCount + ", max=" + MAX_SOURCE_LINES + ")"));
         } else if (tooLongByBytecode) {
-            report.addLine("CURSORY: MethodTooLong (by bytecode) in " + qualifiedName
-                    + " (instructions=" + realInsnCount + ", max=" + MAX_BYTECODE_INSTRUCTIONS_FALLBACK + ")");
+            violations.add(new SimpleViolation("MethodTooLong (by bytecode) in " + qualifiedName
+                    + " (instructions=" + realInsnCount + ", max=" + MAX_BYTECODE_INSTRUCTIONS_FALLBACK + ")"));
         }
+
+        return violations;
     }
 
     private int estimateLineCount(MethodNode methodNode) {
@@ -98,6 +115,19 @@ public class cursory2 implements Cursory {
             }
         }
         return count;
+    }
+
+    private static class SimpleViolation implements Violation {
+        private final String message;
+
+        private SimpleViolation(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return message;
+        }
     }
 }
 

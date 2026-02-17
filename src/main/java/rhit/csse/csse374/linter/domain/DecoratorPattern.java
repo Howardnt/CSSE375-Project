@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Noah Howard
-public class DecoratorPattern implements Pattern {
+public class DecoratorPattern extends Pattern {
 
     @Override
     public CheckResult runPatternCheck(ASMProject project) {

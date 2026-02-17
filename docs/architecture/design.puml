@@ -26,8 +26,6 @@ Interface Cursory{
  
 Class cursory1 implements Cursory{
 }
-Class cursory2 implements Cursory{
-}
 Class cursory3 implements Cursory{
 }
 Class cursory4 implements Cursory{
@@ -38,14 +36,12 @@ Interface Principle{
  
 Class principle1 implements Principle{
 }
-Class principle2 implements Principle{
-}
 Class principle3 implements Principle{
 }
 Class principle4 implements Principle{
 }
  
-Interface Pattern{
+abstract class Pattern{
 }
  
 Class TemplatePattern implements Pattern{
@@ -55,6 +51,10 @@ Class StrategyPattern implements Pattern{
 Class DecoratorPattern implements Pattern{
 }
 Class AdaptorPattern implements Pattern{
+}
+Class singleResponsibilityPrinciple implements Pattern{
+}
+Class MethodTooLongPattern implements Pattern{
 }
  
 }

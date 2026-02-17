@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //Jack Traversa
-public class AdapterPattern implements Pattern {
+public class AdapterPattern extends Pattern {
     @Override
     public CheckResult runPatternCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
@@ -13,7 +13,7 @@ public class AdapterPattern implements Pattern {
         int totalMethods = 0;
         int totalClasses = project.getClasses().size();
 
-        return null;
+        return new CheckResult(violations, totalClasses, totalMethods, errors, "Adapter Pattern");
     }
 }
 

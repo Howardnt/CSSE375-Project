@@ -40,7 +40,7 @@ The repo still contains a `pom.xml`, but the recommended dev workflow is the **n
   - `ConvertToASM`: loads compiled `.class` files and parses them into ASM `ClassNode`s
   - `LintCheck`: common check contract used by `LinterHandler`
   - `Cursory`, `Principle`, `Pattern`: check groupings (extend `LintCheck`)
-  - `cursory2`, `principle2`, `StrategyPattern`: implemented checks (see “Implemented checks” below)
+  - `MethodTooLongPattern`, `singleResponsibilityPrinciple`, `StrategyPattern`: implemented checks (see “Implemented checks” below)
 - `src/main/java/rhit/csse/csse374/linter/data`: **data layer**
   - `ASMProject` / `ASMClass` / `ASMMethod`: wrappers around ASM nodes for easier analysis
   - `LinterOutputText`: report object (currently lines of text)
@@ -54,11 +54,10 @@ The repo still contains a `pom.xml`, but the recommended dev workflow is the **n
 
 - **Cursory**
   - `equalsChecker`: flags suspicious `==` comparisons on reference types like `String`, wrappers, and common collections
-  - `cursory2`: flags **too many parameters** (>5) and **method too long** (>40 source lines, fallback to bytecode instruction count)
-- **Principles**
-  - `principle2`: SRP heuristic (size + low cohesion via field-sharing + dependency fan-out)
 - **Patterns**
   - `StrategyPattern`: detects **Strategy-missing hotspots** (large switch / if-else behavior selection)
+  - `singleResponsibilityPrinciple`: SRP heuristic (size + low cohesion via field-sharing + dependency fan-out)
+  - `MethodTooLongPattern`: flags **too many parameters** (>5) and **method too long** (>40 source lines, fallback to bytecode instruction count)
 
 ## Test fixtures (compiled into `out/` by the script)
 We keep small “good/bad” example classes under `src/test/java/fixtures/` to exercise the checks.

@@ -42,7 +42,6 @@ public class Main {
 
         List<Principle> principles = new ArrayList<>();
         principles.add(new openClosedPrinciple());
-        principles.add(new principle2());
         principles.add(new principle3());
         principles.add(new principle4());
 
@@ -51,6 +50,8 @@ public class Main {
         patterns.add(new StrategyPattern());
         patterns.add(new DecoratorPattern());
         patterns.add(new AdapterPattern());
+        patterns.add(new singleResponsibilityPrinciple());
+        patterns.add(new MethodTooLongPattern());
 
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
 

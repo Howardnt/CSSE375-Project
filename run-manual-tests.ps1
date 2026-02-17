@@ -52,6 +52,9 @@ $outDir = Join-Path $repoRoot "out"
 New-Item -ItemType Directory -Force -Path $libDir | Out-Null
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
+# Clean compilation output so removed/renamed classes don't linger in out/
+Get-ChildItem -LiteralPath $outDir -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
 Ensure-AsmJars $libDir
 
 $cp = "lib/*"

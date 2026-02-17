@@ -5,10 +5,16 @@ import rhit.csse.csse374.linter.data.ASMProject;
 /**
  * Skeleton implementation of {@link Pattern} for detecting Template Method usage/misuse.
  */
-public class TemplatePattern implements Pattern {
+public class TemplatePattern extends Pattern {
     @Override
     public CheckResult runPatternCheck(ASMProject project) {
-        return null;
+        return new CheckResult(
+                java.util.Collections.emptyList(),
+                project.getClasses().size(),
+                0,
+                java.util.Collections.emptyList(),
+                "Template Pattern"
+        );
     }
 }
 
