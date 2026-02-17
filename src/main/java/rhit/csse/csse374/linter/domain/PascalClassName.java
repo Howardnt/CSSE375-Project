@@ -6,7 +6,6 @@ import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Cursory check that verifies class names follow PascalCase naming convention.
@@ -18,33 +17,6 @@ import java.util.stream.Collectors;
  * - Name should not be all uppercase (that's typically for constants)
  */
 public class PascalClassName implements Cursory {
-
-    public static class PascalClassNameViolation implements Violation {
-        private final String fullName;
-        private final String simpleName;
-        private final String reason;
-
-        public PascalClassNameViolation(String fullName, String simpleName, String reason) {
-            this.fullName = fullName;
-            this.simpleName = simpleName;
-            this.reason = reason;
-        }
-
-        @Override
-        public String toString() {
-            String packageName = getPackageName(fullName);
-            String location = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
-            return "PascalCase violation in class '" + location + "': " + reason;
-        }
-
-        private String getPackageName(String fullName) {
-            int lastSlash = fullName.lastIndexOf('/');
-            if (lastSlash < 0) {
-                return "";
-            }
-            return fullName.substring(0, lastSlash).replace('/', '.');
-        }
-    }
 
     @Override
     public String name() {
@@ -71,19 +43,32 @@ public class PascalClassName implements Cursory {
             if (simpleName.contains("$")) {
                 String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
                 if (!isPascalCase(outerClassName)) {
-                    violations.add(new PascalClassNameViolation(fullName, outerClassName,
+                    violations.add(makeViolation(fullName, outerClassName,
                             "Outer class name does not follow PascalCase"));
                 }
                 continue;
             }
 
             if (!isPascalCase(simpleName)) {
-                violations.add(new PascalClassNameViolation(fullName, simpleName,
-                        describeViolation(simpleName)));
+                violations.add(makeViolation(fullName, simpleName, describeViolation(simpleName)));
             }
         }
 
         return new CheckResult(violations, classesChecked, methodsChecked, errors, "PascalCase Class Name");
+    }
+
+    private Violation makeViolation(String fullInternalName, String simpleName, String reason) {
+        String packageName = getPackageName(fullInternalName);
+        String location = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+        return new Violation("PascalCase violation: " + reason, location, "WARNING");
+    }
+
+    private String getPackageName(String fullInternalName) {
+        int lastSlash = fullInternalName.lastIndexOf('/');
+        if (lastSlash < 0) {
+            return "";
+        }
+        return fullInternalName.substring(0, lastSlash).replace('/', '.');
     }
 
     /**

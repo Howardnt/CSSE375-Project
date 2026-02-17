@@ -3,24 +3,19 @@ package rhit.csse.csse374.linter.domain;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import rhit.csse.csse374.linter.data.ASMClass;
-import rhit.csse.csse374.linter.data.ASMProject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // Noah Howard
 public class DecoratorPattern extends Pattern {
-
-    public DecoratorPattern() {
-        super("Decorator");
-    }
 
     @Override
     public String name() {
         return "Decorator";
     }
 
-    public boolean isPattern(ASMClass cls) {
+    @Override
+    protected boolean isPattern(ASMClass cls) {
         ClassNode node = cls.getClassNode();
         
         String superName = node.superName;
