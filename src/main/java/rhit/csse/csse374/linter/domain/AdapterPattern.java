@@ -14,10 +14,6 @@ import java.util.List;
 //Jack Traversa (with Claude assistance in accordance with the requirements document)
 public class AdapterPattern extends Pattern {
 
-    public AdapterPattern(){
-        super("Adapter Pattern");
-    }
-
     @Override
     public String name() {
         return "Adapter Pattern";
