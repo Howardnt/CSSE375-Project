@@ -18,9 +18,8 @@ public class AdapterPattern extends Pattern {
     public String name() {
         return "Adapter";
     }
-
-    @Override
-    protected boolean isPattern(ASMClass asmClass) {
+    
+    public boolean isPattern(ASMClass asmClass) {
         // checking that the class implements something
         if (asmClass.getClassNode().interfaces.isEmpty()){
             return false;
