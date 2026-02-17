@@ -7,67 +7,58 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import rhit.csse.csse374.linter.data.ASMClass;
-import rhit.csse.csse374.linter.data.ASMProject;
 
-import java.util.ArrayList;
-import java.util.List;
+// Refactored to match DecoratorPattern structure
+public class TemplatePattern extends Pattern {
 
-public class TemplatePattern implements Pattern {
-
-    public static class TemplatePatternViolation implements Violation {
-        private final String className;
-        private final String methodName;
-
-        public TemplatePatternViolation(String className, String methodName) {
-            this.className = className;
-            this.methodName = methodName;
-        }
-
-        @Override
-        public String toString() {
-            return "Template Method Pattern detected in " + className.replace('/', '.') + "." + methodName;
-        }
+    public TemplatePattern() {
+        super("Template Method");
     }
 
     @Override
-    public CheckResult runPatternCheck(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int classesChecked = 0;
-        int methodsChecked = 0;
+    public String name() {
+        return "Template Method";
+    }
 
-        for (ASMClass asmClass : project.getClasses()) {
-            ClassNode classNode = asmClass.getClassNode();
-            classesChecked++;
+    @Override
+    public boolean isPattern(ASMClass cls) {
+        ClassNode classNode = cls.getClassNode();
 
-            if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
+        // Only check abstract classes for template method pattern
+        if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
+            return false;
+        }
+
+        // Check each non-abstract method in the abstract class
+        for (MethodNode method : classNode.methods) {
+            // Skip abstract methods and constructors
+            if ((method.access & Opcodes.ACC_ABSTRACT) != 0) {
+                continue;
+            }
+            if (method.name.startsWith("<")) {
                 continue;
             }
 
-            for (MethodNode method : classNode.methods) {
-                if ((method.access & Opcodes.ACC_ABSTRACT) != 0) {
-                    continue;
-                }
-                if (method.name.startsWith("<")) {
-                    continue;
-                }
-
-                methodsChecked++;
-
-                if (isTemplateMethod(classNode, method)) {
-                    violations.add(new TemplatePatternViolation(classNode.name, method.name));
-                }
+            // Check if this method calls any abstract methods in the same class
+            if (isTemplateMethod(classNode, method)) {
+                return true;
             }
         }
 
-        return new CheckResult(violations, classesChecked, methodsChecked, errors, "Template Pattern");
+        return false;
     }
 
+    /**
+     * Checks if a method is a template method by determining if it calls
+     * any abstract methods defined in the same class.
+     */
     private boolean isTemplateMethod(ClassNode classNode, MethodNode method) {
         for (AbstractInsnNode insn : method.instructions) {
             if (insn instanceof MethodInsnNode) {
                 MethodInsnNode methodInsn = (MethodInsnNode) insn;
+                // Check if the method call is to the same class
                 if (methodInsn.owner.equals(classNode.name)) {
+                    // Check if the called method is abstract
                     for (MethodNode m : classNode.methods) {
                         if (m.name.equals(methodInsn.name) && m.desc.equals(methodInsn.desc)
                                 && (m.access & Opcodes.ACC_ABSTRACT) != 0) {

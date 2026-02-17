@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
  *
  * PascalCase rules:
  * - First character must be an uppercase letter
- * - Name should only contain letters and digits (no underscores or special characters)
+ * - Name should only contain letters and digits (no underscores or special
+ * characters)
  * - Name should not be all uppercase (that's typically for constants)
  */
 public class PascalClassName implements Cursory {
@@ -46,7 +47,12 @@ public class PascalClassName implements Cursory {
     }
 
     @Override
-    public CheckResult runCursoryCheck(ASMProject project) {
+    public String name() {
+        return "PascalCase Class Name";
+    }
+
+    @Override
+    public CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         int classesChecked = 0;
         int methodsChecked = 0;
@@ -87,7 +93,8 @@ public class PascalClassName implements Cursory {
      * @return the simple class name (e.g., "MyClass")
      */
     private String getSimpleClassName(String fullName) {
-        // The raw data uses forward slashes '/' as package separators in internal names, not dots.
+        // The raw data uses forward slashes '/' as package separators in internal
+        // names, not dots.
         int lastSlash = fullName.lastIndexOf('/');
         return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
     }
