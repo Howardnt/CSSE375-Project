@@ -8,8 +8,13 @@ import org.objectweb.asm.tree.MethodNode;
 
 import rhit.csse.csse374.linter.data.ASMClass;
 
-// Refactored to match DecoratorPattern structure
+import java.util.ArrayList;
+import java.util.List;
+
+// Enhanced Template Pattern analyzer with detailed method tracking
 public class TemplatePattern extends Pattern {
+
+    private List<TemplateMethodInfo> detectedPatterns = new ArrayList<>();
 
     public TemplatePattern() {
         super("Template Method");
@@ -23,6 +28,7 @@ public class TemplatePattern extends Pattern {
     @Override
     public boolean isPattern(ASMClass cls) {
         ClassNode classNode = cls.getClassNode();
+        detectedPatterns.clear(); // Reset for each class
 
         // Only check abstract classes for template method pattern
         if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
@@ -39,20 +45,25 @@ public class TemplatePattern extends Pattern {
                 continue;
             }
 
-            // Check if this method calls any abstract methods in the same class
-            if (isTemplateMethod(classNode, method)) {
-                return true;
+            // Check if this method is a template method and collect details
+            TemplateMethodInfo info = analyzeTemplateMethod(classNode, method);
+            if (info != null && !info.getAbstractMethodsCalled().isEmpty()) {
+                detectedPatterns.add(info);
             }
         }
 
-        return false;
+        return !detectedPatterns.isEmpty();
     }
 
     /**
-     * Checks if a method is a template method by determining if it calls
-     * any abstract methods defined in the same class.
+     * Analyzes a method to determine if it's a template method and collects
+     * detailed information about which abstract methods it calls.
+     * 
+     * @return TemplateMethodInfo if it's a template method, null otherwise
      */
-    private boolean isTemplateMethod(ClassNode classNode, MethodNode method) {
+    private TemplateMethodInfo analyzeTemplateMethod(ClassNode classNode, MethodNode method) {
+        TemplateMethodInfo info = new TemplateMethodInfo(classNode.name, method.name);
+
         for (AbstractInsnNode insn : method.instructions) {
             if (insn instanceof MethodInsnNode) {
                 MethodInsnNode methodInsn = (MethodInsnNode) insn;
@@ -62,12 +73,38 @@ public class TemplatePattern extends Pattern {
                     for (MethodNode m : classNode.methods) {
                         if (m.name.equals(methodInsn.name) && m.desc.equals(methodInsn.desc)
                                 && (m.access & Opcodes.ACC_ABSTRACT) != 0) {
-                            return true;
+                            info.addAbstractMethodCall(m.name);
                         }
                     }
                 }
             }
         }
-        return false;
+
+        return info.getAbstractMethodsCalled().isEmpty() ? null : info;
+    }
+
+    /**
+     * Returns detailed information about all detected template method patterns.
+     */
+    public List<TemplateMethodInfo> getDetectedPatterns() {
+        return new ArrayList<>(detectedPatterns);
+    }
+
+    /**
+     * Generates a detailed violation message including all template methods found.
+     */
+    public String getDetailedMessage(String className) {
+        if (detectedPatterns.isEmpty()) {
+            return "Template Method Pattern detected in: " + className.replace('/', '.');
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Template Method Pattern detected in: ").append(className.replace('/', '.')).append("\n");
+
+        for (TemplateMethodInfo info : detectedPatterns) {
+            sb.append("  ").append(info.formatDetails().replace("\n", "\n  ")).append("\n");
+        }
+
+        return sb.toString().trim();
     }
 }

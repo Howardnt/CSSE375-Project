@@ -19,25 +19,25 @@ import java.util.stream.Collectors;
  */
 public class PascalClassName implements Cursory {
 
-    public static class PascalClassNameViolation implements Violation {
+    public static class PascalClassNameViolation extends Violation {
         private final String fullName;
         private final String simpleName;
         private final String reason;
 
         public PascalClassNameViolation(String fullName, String simpleName, String reason) {
+            super(buildMessage(fullName, simpleName, reason));
             this.fullName = fullName;
             this.simpleName = simpleName;
             this.reason = reason;
         }
 
-        @Override
-        public String toString() {
+        private static String buildMessage(String fullName, String simpleName, String reason) {
             String packageName = getPackageName(fullName);
             String location = packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
             return "PascalCase violation in class '" + location + "': " + reason;
         }
 
-        private String getPackageName(String fullName) {
+        private static String getPackageName(String fullName) {
             int lastSlash = fullName.lastIndexOf('/');
             if (lastSlash < 0) {
                 return "";

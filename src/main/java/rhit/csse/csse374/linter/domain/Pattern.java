@@ -22,7 +22,7 @@ public abstract class Pattern implements LintCheck {
     protected Pattern(String patternName) {
         this.patternName = patternName;
     }
-    
+
     public final CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
@@ -31,10 +31,17 @@ public abstract class Pattern implements LintCheck {
 
         for (ASMClass cls : project.getClasses()) {
             totalMethods += cls.getMethods().size();
-            
+
             try {
                 if (isPattern(cls)) {
-                    violations.add(new Violation( patternName + " Pattern Detected in: " + cls.getClassName()));
+                    // Check if subclass provides detailed message
+                    String message;
+                    if (this instanceof TemplatePattern) {
+                        message = ((TemplatePattern) this).getDetailedMessage(cls.getClassName());
+                    } else {
+                        message = patternName + " Pattern Detected in: " + cls.getClassName();
+                    }
+                    violations.add(new Violation(message));
                 }
             } catch (Exception e) {
                 errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
