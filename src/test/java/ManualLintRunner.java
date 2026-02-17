@@ -1,6 +1,6 @@
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 import rhit.csse.csse374.linter.domain.*;
+import rhit.csse.csse374.linter.presentation.LinterOutputText;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,24 +40,26 @@ public class ManualLintRunner {
 
         List<Cursory> cursories = new ArrayList<>();
         cursories.add(new equalsChecker());
-        cursories.add(new cursory2());
-        cursories.add(new cursory3());
-        cursories.add(new cursory4());
+        cursories.add(new PascalClassName());
+        // cursories.add(new CamelCaseChecker());
 
         List<Principle> principles = new ArrayList<>();
         principles.add(new openClosedPrinciple());
-        principles.add(new principle2());
-        principles.add(new principle3());
-        principles.add(new principle4());
+        // principles.add(...);
 
         List<Pattern> patterns = new ArrayList<>();
         patterns.add(new TemplatePattern());
         patterns.add(new StrategyPattern());
         patterns.add(new DecoratorPattern());
         patterns.add(new AdapterPattern());
+        patterns.add(new singleResponsibilityPrinciple());
+        patterns.add(new MethodTooLongPattern());
 
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
-        LinterOutputText output = handler.outputLinterResult();
+        LinterResult result = handler.runLinterAnalysis();
+
+        LinterOutputText output = new LinterOutputText();
+        output.formatResult(result);
 
         System.out.println(output);
     }

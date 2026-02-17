@@ -14,7 +14,7 @@ import java.util.Set;
  * Strategy check (smell detector): flags methods that look like type/mode-based behavior selection
  * (big switch / big if-else chains), and suggests considering the Strategy Pattern.
  */
-public class StrategyPattern implements Pattern {
+public class StrategyPattern extends Pattern {
 
     private static final int MIN_SWITCHES_FOR_HOTSPOT = 1;
     private static final int MIN_BRANCHES_FOR_HOTSPOT = 12;
@@ -47,7 +47,7 @@ public class StrategyPattern implements Pattern {
 
             for (MethodNode methodNode : methods) {
                 try {
-                    StrategyViolation v = analyzeMethod(classNode, methodNode);
+                    Violation v = analyzeMethod(classNode, methodNode);
                     if (v != null) {
                         violations.add(v);
                     }
@@ -60,7 +60,7 @@ public class StrategyPattern implements Pattern {
         return new CheckResult(violations, totalClasses, totalMethods, errors, "Strategy Pattern");
     }
 
-    private StrategyViolation analyzeMethod(ClassNode classNode, MethodNode methodNode) {
+    private Violation analyzeMethod(ClassNode classNode, MethodNode methodNode) {
         if ((methodNode.access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != 0) {
             return null;
         }
@@ -96,7 +96,7 @@ public class StrategyPattern implements Pattern {
                 + ", newTypes=" + m.newTypes.size()
                 + ". suggestion: consider extracting behaviors into a Strategy interface and concrete strategy classes.";
 
-        return new StrategyViolation(msg);
+        return new Violation(msg, qualifiedName, "INFO");
     }
 
     private Metrics collectMetrics(MethodNode methodNode) {
@@ -152,19 +152,6 @@ public class StrategyPattern implements Pattern {
         int realInsnCount = 0;
         Set<String> distinctCallOwners = new HashSet<>();
         Set<String> newTypes = new HashSet<>();
-    }
-
-    private static class StrategyViolation implements Violation {
-        private final String message;
-
-        private StrategyViolation(String message) {
-            this.message = message;
-        }
-
-        @Override
-        public String toString() {
-            return message;
-        }
     }
 }
 

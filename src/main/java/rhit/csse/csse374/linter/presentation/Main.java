@@ -38,7 +38,7 @@ public class Main {
 
         // Configure checks
         List<Cursory> cursories = new ArrayList<>();
-        cursories.add(new equalsChecker());
+        cursories.add(new EqualsChecker());
         cursories.add(new PascalClassName());
         // cursories.add(new CamelCaseChecker());
         // cursories.add(new cursory4());
@@ -54,6 +54,8 @@ public class Main {
         // patterns.add(new StrategyPattern());
         // patterns.add(new DecoratorPattern());
         patterns.add(new AdapterPattern());
+        patterns.add(new singleResponsibilityPrinciple());
+        patterns.add(new MethodTooLongPattern());
 
         // Domain layer: Run the analysis
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Control fixture: should NOT be flagged as an SRP violation by `principle2`.
+ * Control fixture: should NOT be flagged as an SRP violation by `singleResponsibilityPrinciple`.
  *
  * Small number of fields and cohesive methods that work with the same state.
  */

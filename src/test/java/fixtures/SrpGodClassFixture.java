@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Fixture intended to be a clear SRP violation / god class for `principle2`.
+ * Fixture intended to be a clear SRP violation / god class for `singleResponsibilityPrinciple`.
  *
  * It has:
  * - many fields (>= 8)

@@ -4,8 +4,8 @@ import org.objectweb.asm.tree.MethodNode;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.presentation.LinterOutputText;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,37 +25,49 @@ public class CamelCaseChecker implements Cursory {
     }
 
     @Override
-    public void run(ASMProject project, LinterOutputText report) {
+    public CheckResult run(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int totalClasses = project.getClasses().size();
+        int totalMethods = 0;
+
         List<ASMClass> classes = project.getClasses();
         for (ASMClass asmClass : classes) {
             for (ASMMethod method : asmClass.getMethods()) {
-                checkMethodName(method, report);
+                totalMethods++;
+                Violation v = checkMethodName(method);
+                if (v != null) {
+                    violations.add(v);
+                }
             }
         }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
-    private void checkMethodName(ASMMethod method, LinterOutputText report) {
+    private Violation checkMethodName(ASMMethod method) {
         MethodNode methodNode = method.getMethodNode();
         if (methodNode == null) {
-            return;
+            return null;
         }
 
         String methodName = method.getMethodName();
         if ("<init>".equals(methodName) || "<clinit>".equals(methodName)) {
-            return;
+            return null;
         }
 
         // Skip compiler-generated helpers
         if ((methodNode.access & (org.objectweb.asm.Opcodes.ACC_SYNTHETIC | org.objectweb.asm.Opcodes.ACC_BRIDGE)) != 0) {
-            return;
+            return null;
         }
 
         if (isLowerCamelCase(methodName)) {
-            return;
+            return null;
         }
 
-        report.addLine("CURSORY: NonCamelCaseMethodName in " + method.getFullMethodName()
-                + " (name=\"" + methodName + "\")");
+        String location = method.getFullMethodName();
+        String msg = "NonCamelCaseMethodName (name=\"" + methodName + "\")";
+        return new Violation(msg, location, "WARNING");
     }
 
     private boolean isLowerCamelCase(String name) {

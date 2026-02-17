@@ -1,19 +1,37 @@
 package rhit.csse.csse374.linter.domain;
 
-/**
- * Domain-layer interface for a SOLID principle checker.
- *
- * Principle checks analyze code for violations of SOLID principles like:
- * - Single Responsibility Principle (SRP)
- * - Open/Closed Principle (OCP)
- * - Liskov Substitution Principle (LSP)
- * - Interface Segregation Principle (ISP)
- * - Dependency Inversion Principle (DIP)
- *
- * All principle checks must implement the run() method from LintCheck,
- * which returns a CheckResult containing violations and metadata.
- */
-public interface Principle extends LintCheck {
-    // No additional methods needed - inherits from LintCheck
-    // CheckResult run(ASMProject project);
+import rhit.csse.csse374.linter.data.ASMClass;
+import rhit.csse.csse374.linter.data.ASMProject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class Principle implements LintCheck {
+
+    private final String principleName;
+
+    protected Principle(String principleName) {
+        this.principleName = principleName;
+    }
+
+    public final CheckResult run(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int totalMethods = 0;
+        int totalClasses = project.getClasses().size();
+
+        for (ASMClass cls : project.getClasses()) {
+            totalMethods += cls.getMethods().size();
+
+            try {
+                violations.addAll(checkClass(cls));
+            } catch (Exception e) {
+                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
+            }
+        }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
+    }
+
+    public abstract List<Violation> checkClass(ASMClass cls);
 }

@@ -1,7 +1,7 @@
 package fixtures;
 
 /**
- * Fixtures for the `cursory2` check:
+ * Fixtures for the `MethodTooLongPattern` check:
  * - Too many parameters (>5)
  * - Method too long (>40 distinct line numbers)
  * - A control method that should not be flagged

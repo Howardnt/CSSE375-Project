@@ -26,7 +26,7 @@ public class TemplatePattern extends Pattern {
     }
 
     @Override
-    public boolean isPattern(ASMClass cls) {
+    protected boolean isPattern(ASMClass cls) {
         ClassNode classNode = cls.getClassNode();
         detectedPatterns.clear(); // Reset for each class
 

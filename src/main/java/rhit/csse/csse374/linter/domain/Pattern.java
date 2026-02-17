@@ -7,23 +7,32 @@ import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMProject;
 
 /**
- * Domain-layer interface for a design pattern detector.
+ * Domain-layer base class for a design pattern detector.
  *
- * Pattern detectors analyze code to identify the presence (or absence)
- * of specific design patterns like Strategy, Template Method, Decorator, etc.
+ * Pattern checks come in two shapes in this codebase:
+ * - simple detectors: determine whether each class exhibits a pattern (override
+ * {@link #isPattern(ASMClass)})
+ * - analysis checks: compute more detailed findings (override
+ * {@link #runPatternCheck(ASMProject)})
  *
- * All pattern detectors must implement the run() method from LintCheck,
- * which returns a CheckResult containing violations and metadata.
+ * The default implementation runs the simple detector over each class and
+ * reports a single violation
+ * when the pattern is detected.
  */
 public abstract class Pattern implements LintCheck {
 
-    private final String patternName;
-
-    protected Pattern(String patternName) {
-        this.patternName = patternName;
+    @Override
+    public final CheckResult run(ASMProject project) {
+        return runPatternCheck(project);
     }
 
-    public final CheckResult run(ASMProject project) {
+    /**
+     * Default pattern execution pipeline.
+     *
+     * Override this method for more detailed analysis that emits multiple
+     * violations per class/method.
+     */
+    protected CheckResult runPatternCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         int totalMethods = 0;
@@ -31,25 +40,25 @@ public abstract class Pattern implements LintCheck {
 
         for (ASMClass cls : project.getClasses()) {
             totalMethods += cls.getMethods().size();
-
             try {
                 if (isPattern(cls)) {
-                    // Check if subclass provides detailed message
-                    String message;
-                    if (this instanceof TemplatePattern) {
-                        message = ((TemplatePattern) this).getDetailedMessage(cls.getClassName());
-                    } else {
-                        message = patternName + " Pattern Detected in: " + cls.getClassName();
-                    }
-                    violations.add(new Violation(message));
+                    violations.add(new Violation(
+                            name() + " pattern detected",
+                            cls.getClassName(),
+                            "INFO"));
                 }
             } catch (Exception e) {
                 errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
             }
         }
 
-        return new CheckResult(violations, totalClasses, totalMethods, errors, patternName + " Pattern");
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
-    public abstract boolean isPattern(ASMClass cls);
+    /**
+     * Simple pattern predicate. Override in detector-style patterns.
+     */
+    protected boolean isPattern(ASMClass cls) {
+        return false;
+    }
 }

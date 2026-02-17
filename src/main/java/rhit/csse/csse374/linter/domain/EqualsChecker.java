@@ -1,7 +1,6 @@
 package rhit.csse.csse374.linter.domain;
 
 import org.objectweb.asm.Type;
-import rhit.csse.csse374.linter.data.ASMProject;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.Instruction;
@@ -16,34 +15,9 @@ import java.util.List;
  *
  * Jack Traversa (with Claude assistance in accordance with the requirements document)
  */
-public class equalsChecker implements Cursory {
+public class EqualsChecker extends Cursory {
 
-    @Override
-    public String name() {
-        return "EqualsOperatorChecker";
-    }
-
-    @Override
-    public CheckResult run(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int totalMethods = 0;
-        int totalClasses = project.getClasses().size();
-
-        for (ASMClass cls : project.getClasses()) {
-            totalMethods += cls.getMethods().size();
-
-            try {
-                violations.addAll(checkClass(cls));
-            } catch (Exception e) {
-                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
-            }
-        }
-
-        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
-    }
-
-    private List<Violation> checkClass(ASMClass cls) {
+    public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();
 
         for (ASMMethod method : cls.getMethods()) {
@@ -118,5 +92,10 @@ public class equalsChecker implements Cursory {
                 typeName.startsWith("java/util/ArrayList") ||
                 typeName.startsWith("java/util/HashMap") ||
                 typeName.startsWith("java/util/HashSet");
+    }
+
+    @Override
+    public String name() {
+        return "equalsChecker";
     }
 }
