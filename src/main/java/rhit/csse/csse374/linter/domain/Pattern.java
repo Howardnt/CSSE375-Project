@@ -10,10 +10,13 @@ import rhit.csse.csse374.linter.data.ASMProject;
  * Domain-layer base class for a design pattern detector.
  *
  * Pattern checks come in two shapes in this codebase:
- * - simple detectors: determine whether each class exhibits a pattern (override {@link #isPattern(ASMClass)})
- * - analysis checks: compute more detailed findings (override {@link #runPatternCheck(ASMProject)})
+ * - simple detectors: determine whether each class exhibits a pattern (override
+ * {@link #isPattern(ASMClass)})
+ * - analysis checks: compute more detailed findings (override
+ * {@link #runPatternCheck(ASMProject)})
  *
- * The default implementation runs the simple detector over each class and reports a single violation
+ * The default implementation runs the simple detector over each class and
+ * reports a single violation
  * when the pattern is detected.
  */
 public abstract class Pattern implements LintCheck {
@@ -26,7 +29,8 @@ public abstract class Pattern implements LintCheck {
     /**
      * Default pattern execution pipeline.
      *
-     * Override this method for more detailed analysis that emits multiple violations per class/method.
+     * Override this method for more detailed analysis that emits multiple
+     * violations per class/method.
      */
     protected CheckResult runPatternCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
@@ -41,8 +45,7 @@ public abstract class Pattern implements LintCheck {
                     violations.add(new Violation(
                             name() + " pattern detected",
                             cls.getClassName(),
-                            "INFO"
-                    ));
+                            "INFO"));
                 }
             } catch (Exception e) {
                 errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
