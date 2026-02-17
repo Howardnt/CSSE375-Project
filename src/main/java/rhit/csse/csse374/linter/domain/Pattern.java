@@ -26,7 +26,8 @@ public abstract class Pattern implements LintCheck {
     /**
      * Default pattern execution pipeline.
      *
-     * Override this method for more detailed analysis that emits multiple violations per class/method.
+     * Override this method for more detailed analysis that emits multiple
+     * violations per class/method.
      */
     protected CheckResult runPatternCheck(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
@@ -38,11 +39,12 @@ public abstract class Pattern implements LintCheck {
             totalMethods += cls.getMethods().size();
             try {
                 if (isPattern(cls)) {
-                    violations.add(new Violation(
-                            name() + " pattern detected",
-                            cls.getClassName(),
-                            "INFO"
-                    ));
+                    String message = name() + " Pattern Detected in: " + cls.getClassName();
+                    String details = getDetails(cls);
+                    if (!details.isEmpty()) {
+                        message += " — " + details;
+                    }
+                    violations.add(new Violation(message));
                 }
             } catch (Exception e) {
                 errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
@@ -52,10 +54,9 @@ public abstract class Pattern implements LintCheck {
         return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
-    /**
-     * Simple pattern predicate. Override in detector-style patterns.
-     */
-    protected boolean isPattern(ASMClass cls) {
-        return false;
+    abstract boolean isPattern(ASMClass cls);
+
+    public String getDetails(ASMClass cls) {
+        return "";
     }
 }

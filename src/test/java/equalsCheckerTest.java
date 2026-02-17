@@ -1,10 +1,7 @@
 import rhit.csse.csse374.linter.domain.CheckResult;
 import rhit.csse.csse374.linter.domain.ConvertToASM;
 import rhit.csse.csse374.linter.domain.Violation;
-import rhit.csse.csse374.linter.domain.equalsChecker;
-
-import java.util.Arrays;
-import java.util.List;
+import rhit.csse.csse374.linter.domain.EqualsChecker;
 
 //Jack Traversa (with Claude assistance in accordance with the requirements document)
 public class equalsCheckerTest {
@@ -20,7 +17,7 @@ public class equalsCheckerTest {
         ConvertToASM converter = new ConvertToASM(classPath);
 
         // Run the checker
-        equalsChecker checker = new equalsChecker();
+        EqualsChecker checker = new EqualsChecker();
 
         CheckResult result = checker.run(converter.toASMProject());
 
