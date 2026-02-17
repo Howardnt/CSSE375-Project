@@ -26,7 +26,7 @@ public class StrategyPattern extends Pattern {
 
     @Override
     public String name() {
-        return "StrategyMissingHotspots";
+        return "Strategy";
     }
 
     @Override

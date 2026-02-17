@@ -16,7 +16,7 @@ public class AdapterPattern extends Pattern {
 
     @Override
     public String name() {
-        return "Adapter Pattern";
+        return "Adapter";
     }
 
     @Override
@@ -35,6 +35,13 @@ public class AdapterPattern extends Pattern {
         // Most methods should utilize methods from that field
         double ratio = getRatio(asmClass);
         return ratio >= 60.0; // at least 60% of methods utilize the adaptee
+    }
+
+    @Override
+    public String getDetails(ASMClass asmClass) {
+        double ratio = getRatio(asmClass);
+        return String.format("%.1f%% of methods delegate to adaptee '%s'",
+                ratio, getAdapteeFieldName(asmClass));
     }
 
     private double getRatio(ASMClass asmClass) {
@@ -107,6 +114,6 @@ public class AdapterPattern extends Pattern {
 
     private String getAdapteeFieldName(ASMClass asmClass) {
         List<FieldNode> fields = findPotentialAdapteeFields(asmClass);
-        return fields.isEmpty() ? "this should not happen" : fields.get(0).name;
+        return fields.isEmpty() ? "unknown" : fields.get(0).name;
     }
 }

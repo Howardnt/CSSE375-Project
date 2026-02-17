@@ -23,7 +23,7 @@ public class TemplatePattern extends Pattern {
 
     @Override
     public String name() {
-        return "Template Method";
+        return "Template";
     }
 
     @Override
