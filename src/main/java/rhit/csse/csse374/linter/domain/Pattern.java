@@ -54,12 +54,7 @@ public abstract class Pattern implements LintCheck {
         return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
-    /**
-     * Simple pattern predicate. Override in detector-style patterns.
-     */
-    protected boolean isPattern(ASMClass cls) {
-        return false;
-    }
+    abstract boolean isPattern(ASMClass cls);
 
     public String getDetails(ASMClass cls) {
         return "";
