@@ -42,15 +42,18 @@ public final class CheckCatalog {
 
     public static List<CheckDescriptor<? extends Cursory>> cursoryChecks() {
         return List.of(
-                new CheckDescriptor<>("equalsChecker", "Equals operator on reference types", Category.CURSORY, true, equalsChecker::new),
+                new CheckDescriptor<>("equalsChecker", "Equals operator on reference types", Category.CURSORY, true, EqualsChecker::new),
                 new CheckDescriptor<>("pascalClassName", "PascalCase class names", Category.CURSORY, true, PascalClassName::new),
-                new CheckDescriptor<>("camelCaseChecker", "camelCase method/field naming", Category.CURSORY, false, CamelCaseChecker::new)
+                new CheckDescriptor<>("camelCaseChecker", "camelCase method/field naming", Category.CURSORY, false, CamelCaseChecker::new),
+                new CheckDescriptor<>("methodTooLong", "Method too long / too many parameters", Category.CURSORY, false, MethodTooLongPattern::new)
         );
     }
 
     public static List<CheckDescriptor<? extends Principle>> principleChecks() {
         return List.of(
-                new CheckDescriptor<>("openClosedPrinciple", "Open/Closed Principle", Category.PRINCIPLE, true, openClosedPrinciple::new)
+                new CheckDescriptor<>("openClosedPrinciple", "Open/Closed Principle", Category.PRINCIPLE, true, OpenClosedPrinciple::new),
+                new CheckDescriptor<>("srpHeuristic", "Single Responsibility Principle (heuristic)", Category.PRINCIPLE, true, singleResponsibilityPrinciple::new),
+                new CheckDescriptor<>("ispPrinciple", "Interface Segregation Principle", Category.PRINCIPLE, false, InterfaceSegregationPrinciple::new)
         );
     }
 
@@ -59,9 +62,7 @@ public final class CheckCatalog {
                 new CheckDescriptor<>("templatePattern", "Template Method detector", Category.PATTERN, true, TemplatePattern::new),
                 new CheckDescriptor<>("strategyPattern", "Strategy-missing hotspots", Category.PATTERN, true, StrategyPattern::new),
                 new CheckDescriptor<>("decoratorPattern", "Decorator detector", Category.PATTERN, true, DecoratorPattern::new),
-                new CheckDescriptor<>("adapterPattern", "Adapter detector", Category.PATTERN, true, AdapterPattern::new),
-                new CheckDescriptor<>("srpHeuristic", "Single Responsibility Principle (heuristic)", Category.PATTERN, true, singleResponsibilityPrinciple::new),
-                new CheckDescriptor<>("methodTooLong", "Method too long / too many parameters", Category.PATTERN, true, MethodTooLongPattern::new)
+                new CheckDescriptor<>("adapterPattern", "Adapter detector", Category.PATTERN, true, AdapterPattern::new)
         );
     }
 }

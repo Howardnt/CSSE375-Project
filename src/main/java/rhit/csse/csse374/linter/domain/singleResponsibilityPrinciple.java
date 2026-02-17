@@ -3,7 +3,6 @@ package rhit.csse.csse374.linter.domain;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import rhit.csse.csse374.linter.data.ASMClass;
-import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.*;
 
@@ -15,7 +14,7 @@ import java.util.*;
  * - cohesion (field sharing across methods, LCOM-ish)
  * - dependency fan-out (distinct external packages referenced via method calls)
  */
-public class singleResponsibilityPrinciple extends Pattern {
+public class singleResponsibilityPrinciple extends Principle {
 
     private static final int MIN_PUBLIC_METHODS = 10;
     private static final int MIN_TOTAL_METHODS = 20;
@@ -23,32 +22,22 @@ public class singleResponsibilityPrinciple extends Pattern {
     private static final double MIN_DISJOINT_RATIO = 0.5;
     private static final int MIN_DEPENDENCY_PACKAGES = 3;
 
+    public singleResponsibilityPrinciple() {
+        super("Single Responsibility Principle");
+    }
+
     @Override
     public String name() {
         return "SingleResponsibilityPrinciple";
     }
 
     @Override
-    public CheckResult runPatternCheck(ASMProject project) {
-        List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-
-        int totalClasses = project.getClasses().size();
-        int totalMethods = 0;
-
-        for (ASMClass asmClass : project.getClasses()) {
-            totalMethods += asmClass.getMethods().size();
-            try {
-                Violation v = analyzeClass(asmClass.getClassNode());
-                if (v != null) {
-                    violations.add(v);
-                }
-            } catch (Exception e) {
-                errors.add("Error analyzing " + asmClass.getClassName() + ": " + e.getMessage());
-            }
+    public List<Violation> checkClass(ASMClass cls) {
+        Violation v = analyzeClass(cls.getClassNode());
+        if (v == null) {
+            return java.util.Collections.emptyList();
         }
-
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "Single Responsibility Principle");
+        return java.util.Collections.singletonList(v);
     }
 
     private Violation analyzeClass(ClassNode classNode) {

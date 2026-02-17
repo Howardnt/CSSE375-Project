@@ -142,12 +142,17 @@ public final class ResultsAccordionPanel extends JPanel {
         return (s == null) ? "" : s;
     }
 
-    private static final class CollapsibleCheckPanel extends JPanel {
+    private final class CollapsibleCheckPanel extends JPanel {
         private final JToggleButton headerButton = new JToggleButton();
         private final JPanel body = new JPanel();
+        private final String category;
+        private final String checkName;
+        private final String countText;
 
         CollapsibleCheckPanel(String category, String checkName, List<Violation> allViolations, List<Violation> visibleViolations) {
             super(new BorderLayout());
+            this.category = category;
+            this.checkName = checkName;
             setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor"), 1, true),
                     new EmptyBorder(8, 10, 8, 10)
@@ -157,7 +162,7 @@ public final class ResultsAccordionPanel extends JPanel {
             int shown = (visibleViolations == null) ? 0 : visibleViolations.size();
 
             boolean filtersActive = shown != total;
-            String countText = filtersActive
+            this.countText = filtersActive
                     ? (shown + " / " + total + " issues")
                     : (total + (total == 1 ? " issue" : " issues"));
 
@@ -168,8 +173,9 @@ public final class ResultsAccordionPanel extends JPanel {
             headerButton.setFocusPainted(false);
             headerButton.setHorizontalAlignment(SwingConstants.LEFT);
             headerButton.setFont(headerButton.getFont().deriveFont(Font.BOLD));
-            headerButton.setText(buildHeaderText(false, category, checkName, countText));
-            headerButton.addActionListener(e -> toggle(category, checkName, countText));
+            headerButton.setText(buildHeaderText(false, category, checkName, this.countText));
+            headerButton.setVerticalAlignment(SwingConstants.CENTER);
+            headerButton.addActionListener(e -> toggle());
             add(headerButton, BorderLayout.NORTH);
 
             body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
@@ -179,16 +185,25 @@ public final class ResultsAccordionPanel extends JPanel {
             populateBody(visibleViolations == null ? List.of() : visibleViolations);
             body.setVisible(false);
 
-            // Allow expanding/collapsing: don't clamp max height.
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-            headerButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+            headerButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, headerButton.getPreferredSize().height));
+            setAlignmentX(LEFT_ALIGNMENT);
         }
 
-        private void toggle(String category, String checkName, String countText) {
+        @Override
+        public Dimension getMaximumSize() {
+            // Critical: prevent BoxLayout from vertically stretching accordion rows.
+            Dimension pref = getPreferredSize();
+            return new Dimension(Integer.MAX_VALUE, pref.height);
+        }
+
+        private void toggle() {
             boolean open = headerButton.isSelected();
             headerButton.setText(buildHeaderText(open, category, checkName, countText));
             body.setVisible(open);
-            revalidate();
+            body.revalidate();
+            body.repaint();
+            ResultsAccordionPanel.this.listPanel.revalidate();
+            ResultsAccordionPanel.this.listPanel.repaint();
         }
 
         private String buildHeaderText(boolean open, String category, String checkName, String countText) {
@@ -258,7 +273,13 @@ public final class ResultsAccordionPanel extends JPanel {
             add(center, BorderLayout.CENTER);
 
             // Allow wrapping and variable height.
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+            setAlignmentX(LEFT_ALIGNMENT);
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            Dimension pref = getPreferredSize();
+            return new Dimension(Integer.MAX_VALUE, pref.height);
         }
 
         private Color severityColor(String severity) {

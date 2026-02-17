@@ -60,6 +60,12 @@ public class StrategyPattern extends Pattern {
         return new CheckResult(violations, totalClasses, totalMethods, errors, "Strategy Pattern");
     }
 
+    @Override
+    boolean isPattern(ASMClass cls) {
+        // This detector uses the detailed analysis path (runPatternCheck), not the simple per-class predicate.
+        return false;
+    }
+
     private Violation analyzeMethod(ClassNode classNode, MethodNode methodNode) {
         if ((methodNode.access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != 0) {
             return null;
