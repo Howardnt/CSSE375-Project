@@ -1,20 +1,67 @@
 package rhit.csse.csse374.linter.domain;
 
-import rhit.csse.csse374.linter.data.ASMProject;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
-/**
- * Skeleton implementation of {@link Pattern} for detecting Template Method usage/misuse.
- */
+import rhit.csse.csse374.linter.data.ASMClass;
+
 public class TemplatePattern extends Pattern {
     @Override
-    public CheckResult runPatternCheck(ASMProject project) {
-        return new CheckResult(
-                java.util.Collections.emptyList(),
-                project.getClasses().size(),
-                0,
-                java.util.Collections.emptyList(),
-                "Template Pattern"
-        );
+    public String name() {
+        return "Template Method";
+    }
+
+    @Override
+    protected boolean isPattern(ASMClass cls) {
+        ClassNode classNode = cls.getClassNode();
+
+        // Only check abstract classes for template method pattern
+        if ((classNode.access & Opcodes.ACC_ABSTRACT) == 0) {
+            return false;
+        }
+
+        // Check each non-abstract method in the abstract class
+        for (MethodNode method : classNode.methods) {
+            // Skip abstract methods and constructors
+            if ((method.access & Opcodes.ACC_ABSTRACT) != 0) {
+                continue;
+            }
+            if (method.name.startsWith("<")) {
+                continue;
+            }
+
+            // Check if this method calls any abstract methods in the same class
+            if (isTemplateMethod(classNode, method)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if a method is a template method by determining if it calls
+     * any abstract methods defined in the same class.
+     */
+    private boolean isTemplateMethod(ClassNode classNode, MethodNode method) {
+        for (AbstractInsnNode insn : method.instructions) {
+            if (insn instanceof MethodInsnNode) {
+                MethodInsnNode methodInsn = (MethodInsnNode) insn;
+                // Check if the method call is to the same class
+                if (methodInsn.owner.equals(classNode.name)) {
+                    // Check if the called method is abstract
+                    for (MethodNode m : classNode.methods) {
+                        if (m.name.equals(methodInsn.name) && m.desc.equals(methodInsn.desc)
+                                && (m.access & Opcodes.ACC_ABSTRACT) != 0) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
-

@@ -22,7 +22,7 @@ public class equalsCheckerTest {
         // Run the checker
         equalsChecker checker = new equalsChecker();
 
-        CheckResult result = checker.checkProject(converter.toASMProject());
+        CheckResult result = checker.run(converter.toASMProject());
 
         // Print summary
         System.out.println(result);

@@ -1,40 +1,61 @@
 package rhit.csse.csse374.linter.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
 
 /**
  * Domain-layer base class for a design pattern detector.
  *
- * Pattern is now modeled as an abstract class to provide a shared execution/reporting
- * pipeline while still requiring concrete detectors to implement the analysis logic.
+ * Pattern checks come in two shapes in this codebase:
+ * - simple detectors: determine whether each class exhibits a pattern (override {@link #isPattern(ASMClass)})
+ * - analysis checks: compute more detailed findings (override {@link #runPatternCheck(ASMProject)})
+ *
+ * The default implementation runs the simple detector over each class and reports a single violation
+ * when the pattern is detected.
  */
 public abstract class Pattern implements LintCheck {
 
-    /**
-     * Pattern detectors typically return a structured result (violations + stats).
-     */
-    public abstract CheckResult runPatternCheck(ASMProject project);
-
-    /**
-     * Bridge into the common {@link LintCheck} contract so {@link LinterHandler} can run patterns
-     * the same way as other checks.
-     */
     @Override
-    public final void run(ASMProject project, LinterOutputText report) {
-        CheckResult result = runPatternCheck(project);
-        if (result == null) {
-            report.addLine("PATTERN: " + name() + " returned null result");
-            return;
+    public final CheckResult run(ASMProject project) {
+        return runPatternCheck(project);
+    }
+
+    /**
+     * Default pattern execution pipeline.
+     *
+     * Override this method for more detailed analysis that emits multiple violations per class/method.
+     */
+    protected CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int totalMethods = 0;
+        int totalClasses = project.getClasses().size();
+
+        for (ASMClass cls : project.getClasses()) {
+            totalMethods += cls.getMethods().size();
+            try {
+                if (isPattern(cls)) {
+                    violations.add(new Violation(
+                            name() + " pattern detected",
+                            cls.getClassName(),
+                            "INFO"
+                    ));
+                }
+            } catch (Exception e) {
+                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
+            }
         }
 
-        report.addLine("PATTERN: " + result.toString());
-        for (Violation v : result.getViolations()) {
-            report.addLine("         " + v.toString());
-        }
-        for (String err : result.getAnalysisErrors()) {
-            report.addLine("         [analysis] " + err);
-        }
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
+    }
+
+    /**
+     * Simple pattern predicate. Override in detector-style patterns.
+     */
+    protected boolean isPattern(ASMClass cls) {
+        return false;
     }
 }
-

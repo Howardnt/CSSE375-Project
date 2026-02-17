@@ -1,83 +1,89 @@
 @startuml
-package presentation{
-Class Main{
+package presentation {
+  class Main
+  class LinterOutputText
 }
- 
+
+package domain {
+  class LinterHandler {
+    -project: ASMProject
+    +runLinterAnalysis(): LinterResult
+  }
+
+  class ConvertToASM {
+    -projectLocation: String
+    +toASMProject(): ASMProject
+    +loadClassesFromPath(path: String): List<ClassNode>
+    +findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
+    +loadClassFile(classFile: File): ClassNode
+  }
+
+  interface LintCheck {
+    +name(): String
+    +run(project: ASMProject): CheckResult
+  }
+
+  interface Cursory
+  interface Principle
+  abstract class Pattern
+
+  Cursory ..|> LintCheck
+  Principle ..|> LintCheck
+  Pattern ..|> LintCheck
+
+  class equalsChecker
+  class PascalClassName
+  class CamelCaseChecker
+  class openClosedPrinciple
+
+  equalsChecker --|> Cursory
+  PascalClassName --|> Cursory
+  CamelCaseChecker --|> Cursory
+  openClosedPrinciple --|> Principle
+
+  class TemplatePattern
+  class StrategyPattern
+  class DecoratorPattern
+  class AdapterPattern
+  class singleResponsibilityPrinciple
+  class MethodTooLongPattern
+
+  TemplatePattern --|> Pattern
+  StrategyPattern --|> Pattern
+  DecoratorPattern --|> Pattern
+  AdapterPattern --|> Pattern
+  singleResponsibilityPrinciple --|> Pattern
+  MethodTooLongPattern --|> Pattern
+
+  class Violation
+  class CheckResult
+  class LinterResult
 }
- 
-package domain{
- 
-Class LinterHandler{
-- Patters: List<Pattern>
-- Principles: List<Principle>
-- Cursories: List<Cursory>
-- Projects: List<ProjectToCheck>
- 
-+ OutputLinterResult():LinterOutputText
+
+package data {
+  class ASMProject
+  class ASMClass
+  class ASMMethod
+  class Instruction
+  class StackValuePair
 }
- 
-Class ConvertToASM{
-- ProjectLocation: List<String>
- 
-}
- 
-Interface Cursory{
-}
- 
-Class cursory1 implements Cursory{
-}
-Class cursory3 implements Cursory{
-}
-Class cursory4 implements Cursory{
-}
- 
-Interface Principle{
-}
- 
-Class principle1 implements Principle{
-}
-Class principle3 implements Principle{
-}
-Class principle4 implements Principle{
-}
- 
-abstract class Pattern{
-}
- 
-Class TemplatePattern implements Pattern{
-}
-Class StrategyPattern implements Pattern{
-}
-Class DecoratorPattern implements Pattern{
-}
-Class AdaptorPattern implements Pattern{
-}
-Class singleResponsibilityPrinciple implements Pattern{
-}
-Class MethodTooLongPattern implements Pattern{
-}
- 
-}
- 
-package Data{
-Class ProjectToCheck{
-}
- 
-Class LinterOutputText{
-}
- 
-}
- 
+
+ASMProject -r-> "*" ASMClass
+ASMClass -d-> "*" ASMMethod
+ASMMethod -l-> "*" Instruction
+Instruction ..> StackValuePair
+
 Main --> ConvertToASM
 Main --> LinterHandler
- 
-LinterHandler --> Pattern
-LinterHandler --> Principle
-LinterHandler --> Cursory
-LinterHandler --> ProjectToCheck
- 
-ConvertToASM ..> ProjectToCheck
-LinterHandler ..> LinterOutputText
- 
-@enduml
+Main --> LinterOutputText
 
+LinterHandler --> ASMProject
+LinterHandler --> "*" LintCheck
+LinterHandler ..> LinterResult
+
+CheckResult --> "*" Violation
+LinterResult --> "*" CheckResult
+
+LinterOutputText ..> LinterResult
+
+@enduml

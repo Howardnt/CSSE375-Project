@@ -39,7 +39,7 @@ public class singleResponsibilityPrinciple extends Pattern {
         for (ASMClass asmClass : project.getClasses()) {
             totalMethods += asmClass.getMethods().size();
             try {
-                SRPViolation v = analyzeClass(asmClass.getClassNode());
+                Violation v = analyzeClass(asmClass.getClassNode());
                 if (v != null) {
                     violations.add(v);
                 }
@@ -51,7 +51,7 @@ public class singleResponsibilityPrinciple extends Pattern {
         return new CheckResult(violations, totalClasses, totalMethods, errors, "Single Responsibility Principle");
     }
 
-    private SRPViolation analyzeClass(ClassNode classNode) {
+    private Violation analyzeClass(ClassNode classNode) {
         @SuppressWarnings("unchecked")
         List<FieldNode> fields = (List<FieldNode>) classNode.fields;
         @SuppressWarnings("unchecked")
@@ -99,7 +99,7 @@ public class singleResponsibilityPrinciple extends Pattern {
                 + ", cohesionDisjointRatio=" + String.format(Locale.ROOT, "%.2f", disjointRatio)
                 + ", dependencyPackages=" + dependencyPackages
                 + "). suggestion: class likely has multiple responsibilities; consider splitting into smaller, cohesive types.";
-        return new SRPViolation(msg);
+        return new Violation(msg, classNode.name, "WARNING");
     }
 
     private Map<MethodNode, Set<String>> computeFieldsAccessedPerMethod(ClassNode classNode, List<MethodNode> methods) {
@@ -173,19 +173,6 @@ public class singleResponsibilityPrinciple extends Pattern {
             }
         }
         return packages.size();
-    }
-
-    private static class SRPViolation implements Violation {
-        private final String message;
-
-        private SRPViolation(String message) {
-            this.message = message;
-        }
-
-        @Override
-        public String toString() {
-            return message;
-        }
     }
 }
 

@@ -81,15 +81,24 @@ public class MethodTooLongPattern extends Pattern {
 
         String qualifiedName = method.getClassName() + "." + method.getMethodName();
         if (tooManyParams) {
-            violations.add(new SimpleViolation("TooManyParameters in " + qualifiedName
-                    + " (params=" + paramCount + ", max=" + MAX_PARAMETERS + ")"));
+            violations.add(new Violation(
+                    "TooManyParameters (params=" + paramCount + ", max=" + MAX_PARAMETERS + ")",
+                    qualifiedName,
+                    "WARNING"
+            ));
         }
         if (tooLongByLines) {
-            violations.add(new SimpleViolation("MethodTooLong (by lines) in " + qualifiedName
-                    + " (lines=" + lineCount + ", max=" + MAX_SOURCE_LINES + ")"));
+            violations.add(new Violation(
+                    "MethodTooLong (by lines) (lines=" + lineCount + ", max=" + MAX_SOURCE_LINES + ")",
+                    qualifiedName,
+                    "WARNING"
+            ));
         } else if (tooLongByBytecode) {
-            violations.add(new SimpleViolation("MethodTooLong (by bytecode) in " + qualifiedName
-                    + " (instructions=" + realInsnCount + ", max=" + MAX_BYTECODE_INSTRUCTIONS_FALLBACK + ")"));
+            violations.add(new Violation(
+                    "MethodTooLong (by bytecode) (instructions=" + realInsnCount + ", max=" + MAX_BYTECODE_INSTRUCTIONS_FALLBACK + ")",
+                    qualifiedName,
+                    "WARNING"
+            ));
         }
 
         return violations;
@@ -115,19 +124,6 @@ public class MethodTooLongPattern extends Pattern {
             }
         }
         return count;
-    }
-
-    private static class SimpleViolation implements Violation {
-        private final String message;
-
-        private SimpleViolation(String message) {
-            this.message = message;
-        }
-
-        @Override
-        public String toString() {
-            return message;
-        }
     }
 }
 

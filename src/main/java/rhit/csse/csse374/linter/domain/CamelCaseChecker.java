@@ -4,7 +4,7 @@ import org.objectweb.asm.tree.MethodNode;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.ASMProject;
-import rhit.csse.csse374.linter.data.LinterOutputText;
+import rhit.csse.csse374.linter.presentation.LinterOutputText;
 
 import java.util.List;
 
