@@ -2,7 +2,6 @@ package rhit.csse.csse374.linter.domain;
 
 import org.objectweb.asm.tree.ClassNode;
 import rhit.csse.csse374.linter.data.ASMClass;
-import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
  * characters)
  * - Name should not be all uppercase (that's typically for constants)
  */
-public class PascalClassName implements Cursory {
+public class PascalClassName extends Cursory {
 
     @Override
     public String name() {
@@ -24,37 +23,29 @@ public class PascalClassName implements Cursory {
     }
 
     @Override
-    public CheckResult run(ASMProject project) {
+    public List<Violation> checkClass(ASMClass asmClass) {
         List<Violation> violations = new ArrayList<>();
-        int classesChecked = 0;
-        int methodsChecked = 0;
-        List<String> errors = new ArrayList<>();
+        ClassNode classNode = asmClass.getClassNode();
 
-        for (ASMClass asmClass : project.getClasses()) {
-            classesChecked++;
-            ClassNode classNode = asmClass.getClassNode();
-            methodsChecked += classNode.methods.size();
+        // Get the simple class name (without package)
+        String fullName = classNode.name;
+        String simpleName = getSimpleClassName(fullName);
 
-            // Get the simple class name (without package)
-            String fullName = classNode.name;
-            String simpleName = getSimpleClassName(fullName);
-
-            // Skip anonymous or synthetic classes (e.g., "ClassName$1")
-            if (simpleName.contains("$")) {
-                String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
-                if (!isPascalCase(outerClassName)) {
-                    violations.add(makeViolation(fullName, outerClassName,
-                            "Outer class name does not follow PascalCase"));
-                }
-                continue;
+        // Skip anonymous or synthetic classes (e.g., "ClassName$1")
+        if (simpleName.contains("$")) {
+            String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
+            if (!isPascalCase(outerClassName)) {
+                violations.add(makeViolation(fullName, outerClassName,
+                        "Outer class name does not follow PascalCase"));
             }
-
-            if (!isPascalCase(simpleName)) {
-                violations.add(makeViolation(fullName, simpleName, describeViolation(simpleName)));
-            }
+            return violations;
         }
 
-        return new CheckResult(violations, classesChecked, methodsChecked, errors, "PascalCase Class Name");
+        if (!isPascalCase(simpleName)) {
+            violations.add(makeViolation(fullName, simpleName, describeViolation(simpleName)));
+        }
+
+        return violations;
     }
 
     private Violation makeViolation(String fullInternalName, String simpleName, String reason) {

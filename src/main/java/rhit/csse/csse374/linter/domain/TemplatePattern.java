@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import rhit.csse.csse374.linter.data.ASMClass;
+import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +18,39 @@ public class TemplatePattern extends Pattern {
     private List<TemplateMethodInfo> detectedPatterns = new ArrayList<>();
 
     public TemplatePattern() {
-        super("Template Method");
+        // No super() call needed - Pattern base class doesn't require constructor args
     }
 
     @Override
     public String name() {
         return "Template Method";
+    }
+
+    @Override
+    protected CheckResult runPatternCheck(ASMProject project) {
+        List<Violation> violations = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int totalMethods = 0;
+        int totalClasses = project.getClasses().size();
+
+        for (ASMClass cls : project.getClasses()) {
+            totalMethods += cls.getMethods().size();
+
+            try {
+                if (isPattern(cls)) {
+                    // Create detailed violation message with template method info
+                    String detailedMessage = getDetailedMessage(cls.getClassName());
+                    violations.add(new Violation(
+                            detailedMessage,
+                            cls.getClassName(),
+                            "INFO"));
+                }
+            } catch (Exception e) {
+                errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());
+            }
+        }
+
+        return new CheckResult(violations, totalClasses, totalMethods, errors, name());
     }
 
     @Override
