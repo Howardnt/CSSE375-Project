@@ -41,19 +41,18 @@ public class Main {
         cursories.add(new EqualsChecker());
         cursories.add(new PascalClassName());
         cursories.add(new MethodTooLongPattern());
-        // cursories.add(new CamelCaseChecker());
-        // cursories.add(new cursory4());
+        cursories.add(new CamelCaseChecker());
 
         List<Principle> principles = new ArrayList<>();
-        principles.add(new singleResponsibilityPrinciple());
-        // principles.add(new openClosedPrinciple());
-        // principles.add(new principle2());
-        // principles.add(new principle3());
-        // principles.add(new principle4());
+        // add all principle checks
+        principles.add(new OpenClosedPrinciple());
+        principles.add(new HollywoodPrinciple());
 
         List<Pattern> patterns = new ArrayList<>();
         patterns.add(new StrategyPattern());
-
+        patterns.add(new TemplatePattern());
+        patterns.add(new DecoratorPattern());
+        patterns.add(new AdapterPattern());
         // Domain layer: Run the analysis
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
         LinterResult result = handler.runLinterAnalysis();
