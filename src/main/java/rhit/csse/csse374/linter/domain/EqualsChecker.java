@@ -64,14 +64,9 @@ public class EqualsChecker extends Cursory {
     }
 
     private boolean isProblematicType(Type type) {
-        if (type.getSort() != Type.OBJECT) {
-            return false;
-        }
-
-        String typeName = type.getInternalName();
-        return typeName.equals("java/lang/String") ||
-                isWrapperType(typeName) ||
-                isCollectionType(typeName);
+        if (type == null) return false;
+        // Flag any object/array type — primitives have sort INT, FLOAT, etc., not OBJECT
+        return type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY;
     }
 
     private boolean isWrapperType(String typeName) {
