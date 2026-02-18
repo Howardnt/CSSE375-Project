@@ -40,22 +40,18 @@ public class ManualLintRunner {
         ASMProject project = converter.toASMProject();
 
         List<Cursory> cursories = new ArrayList<>();
-        cursories.add(new equalsChecker());
+        cursories.add(new EqualsChecker());
         cursories.add(new PascalClassName());
+        cursories.add(new MethodTooLongPattern());
         // cursories.add(new CamelCaseChecker());
 
         List<Principle> principles = new ArrayList<>();
-        principles.add(new openClosedPrinciple());
-        principles.add(new HollywoodPrinciple());
+        principles.add(new OpenClosedPrinciple());
+        principles.add(new singleResponsibilityPrinciple());
         // principles.add(...);
 
         List<Pattern> patterns = new ArrayList<>();
-        patterns.add(new TemplatePattern());
         patterns.add(new StrategyPattern());
-        patterns.add(new DecoratorPattern());
-        patterns.add(new AdapterPattern());
-        patterns.add(new singleResponsibilityPrinciple());
-        patterns.add(new MethodTooLongPattern());
 
         LinterHandler handler = new LinterHandler(patterns, principles, cursories, project);
         LinterResult result = handler.runLinterAnalysis();

@@ -28,6 +28,19 @@ To lint a different compiled project (directory containing `.class` files):
 - Click **Run** above `main()`
 - Optionally provide a program argument pointing at a compiled-classes directory
 
+### Run the GUI (Swing)
+The GUI is a small Swing app that sits on top of the same linter pipeline, but provides:
+- a file/folder picker for compiled `.class` outputs
+- checkboxes to select which checks to run
+- a sortable, filterable violations table + raw report view
+
+To run from VS Code / Cursor:
+- Open `src/main/java/rhit/csse/csse374/linter/presentation/gui/LinterGuiMain.java`
+- Click **Run** above `main()`
+- In the GUI, select a **compiled output** folder (e.g. `out/` from the script, or `target/classes` from Maven)
+
+Note: this linter analyzes **compiled bytecode** (`.class` files), not `.java` source.
+
 ### Maven (optional)
 The repo still contains a `pom.xml`, but the recommended dev workflow is the **non-Maven** script above.
 
@@ -35,6 +48,8 @@ The repo still contains a `pom.xml`, but the recommended dev workflow is the **n
 
 - `src/main/java/rhit/csse/csse374/linter/presentation`: **presentation layer**
   - `Main`: CLI entry point (wires the system together)
+- `src/main/java/rhit/csse/csse374/linter/presentation/gui`: **GUI (Swing)**
+  - `LinterGuiMain`: GUI entry point
 - `src/main/java/rhit/csse/csse374/linter/domain`: **domain layer**
   - `LinterHandler`: central coordinator (holds lists of checks/detectors and runs them)
   - `ConvertToASM`: loads compiled `.class` files and parses them into ASM `ClassNode`s

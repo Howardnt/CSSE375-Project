@@ -6,7 +6,6 @@ import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
-import rhit.csse.csse374.linter.data.ASMProject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,7 +19,7 @@ import java.util.Set;
  * - Too long: > 40 distinct source lines (via LineNumberNode)
  *   Fallback if no line numbers: > 200 real bytecode instructions
  */
-public class MethodTooLongPattern extends Pattern {
+public class MethodTooLongPattern extends Cursory {
 
     private static final int MAX_PARAMETERS = 5;
     private static final int MAX_SOURCE_LINES = 40;
@@ -32,26 +31,19 @@ public class MethodTooLongPattern extends Pattern {
     }
 
     @Override
-    public CheckResult runPatternCheck(ASMProject project) {
+    public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
 
-        int totalClasses = project.getClasses().size();
-        int totalMethods = 0;
-
-        List<ASMClass> classes = project.getClasses();
-        for (ASMClass asmClass : classes) {
-            totalMethods += asmClass.getMethods().size();
-            for (ASMMethod method : asmClass.getMethods()) {
-                try {
-                    violations.addAll(analyzeMethod(method));
-                } catch (Exception e) {
-                    errors.add("Error analyzing " + method.getClassName() + "." + method.getMethodName() + ": " + e.getMessage());
-                }
+        for (ASMMethod method : cls.getMethods()) {
+            try {
+                violations.addAll(analyzeMethod(method));
+            } catch (Exception e) {
+                String qualifiedName = method.getClassName() + "." + method.getMethodName();
+                violations.add(new Violation("Error analyzing method: " + e.getMessage(), qualifiedName, "ERROR"));
             }
         }
 
-        return new CheckResult(violations, totalClasses, totalMethods, errors, "Method Length/Parameters");
+        return violations;
     }
 
     private List<Violation> analyzeMethod(ASMMethod method) {
