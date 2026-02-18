@@ -6,11 +6,18 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Run Linter (Skeleton)",
+            "name": "Run Linter (Main)",
             "request": "launch",
             "mainClass": "rhit.csse.csse374.linter.presentation.Main",
             "projectName": "LinterProject",
-            "args": "C:/path/to/project1 C:/path/to/project2"
+            "args": "target/classes"
+        },
+        {
+            "type": "java",
+            "name": "Run ManualLintRunner",
+            "request": "launch",
+            "mainClass": "ManualLintRunner",
+            "projectName": "LinterProject"
         },
         {
             "type": "java",

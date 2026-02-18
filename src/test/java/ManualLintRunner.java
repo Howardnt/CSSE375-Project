@@ -12,8 +12,9 @@ import java.util.List;
  * This is intentionally NOT a JUnit test. Run it directly from your IDE.
  *
  * Usage:
- * - With arg: args[0] is a directory containing compiled .class files (searched recursively),
- *   or a single .class file.
+ * - With arg: args[0] is a directory containing compiled .class files (searched
+ * recursively),
+ * or a single .class file.
  * - With no args: tries common output folders (bin/, target/classes/, etc.).
  */
 public class ManualLintRunner {
@@ -45,6 +46,7 @@ public class ManualLintRunner {
 
         List<Principle> principles = new ArrayList<>();
         principles.add(new openClosedPrinciple());
+        principles.add(new HollywoodPrinciple());
         // principles.add(...);
 
         List<Pattern> patterns = new ArrayList<>();
@@ -66,7 +68,7 @@ public class ManualLintRunner {
 
     private static String findDefaultOutputDir() {
         // Try common IDE / build outputs; return the first that contains .class files.
-        String[] candidates = new String[]{
+        String[] candidates = new String[] {
                 // our recommended manual compilation output
                 "out",
                 "bin",
@@ -102,4 +104,3 @@ public class ManualLintRunner {
         return false;
     }
 }
-

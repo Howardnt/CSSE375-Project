@@ -44,7 +44,8 @@ public class Main {
         // cursories.add(new cursory4());
 
         List<Principle> principles = new ArrayList<>();
-        // principles.add(new openClosedPrinciple());
+        principles.add(new openClosedPrinciple());
+        principles.add(new HollywoodPrinciple());
         // principles.add(new principle2());
         // principles.add(new principle3());
         // principles.add(new principle4());
