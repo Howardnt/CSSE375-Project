@@ -244,7 +244,7 @@ public class LinterGuiFrame extends JFrame {
         }
 
         // Gather selected checks and instantiate them in a stable order.
-        List<CheckDescriptor<?>> selected = getSelectedCheckDescriptors();
+        List<CheckDescriptor> selected = getSelectedCheckDescriptors();
         if (selected.isEmpty()) {
             showWarning("No checks selected", "Select at least one check, then click Run.");
             return;
@@ -258,7 +258,7 @@ public class LinterGuiFrame extends JFrame {
         List<String> principleNames = new ArrayList<>();
         List<String> patternNames = new ArrayList<>();
 
-        for (CheckDescriptor<?> d : selected) {
+        for (CheckDescriptor d : selected) {
             LintCheck check = d.create();
             switch (d.category()) {
                 case CURSORY -> {
@@ -321,15 +321,15 @@ public class LinterGuiFrame extends JFrame {
      * Returns instantiated checks for the user's current selection.
      * Used later by the background runner.
      */
-    public List<CheckCatalog.CheckDescriptor<?>> getSelectedCheckDescriptors() {
-        List<CheckCatalog.CheckDescriptor<?>> selected = new ArrayList<>();
+    public List<CheckDescriptor> getSelectedCheckDescriptors() {
+        List<CheckDescriptor> selected = new ArrayList<>();
         selected.addAll(cursoryTab.getSelectedDescriptors());
         selected.addAll(principleTab.getSelectedDescriptors());
         selected.addAll(patternTab.getSelectedDescriptors());
         return selected;
     }
 
-    private List<CheckDescriptor<?>> getSelectedChecks() {
+    private List<CheckDescriptor> getSelectedChecks() {
         return getSelectedCheckDescriptors();
     }
 
@@ -394,10 +394,10 @@ public class LinterGuiFrame extends JFrame {
      * UI component for one category's check list + selection buttons.
      */
     private static final class CheckTabPanel extends JPanel {
-        private final List<CheckDescriptor<?>> descriptors;
+        private final List<CheckDescriptor> descriptors;
         private final List<JCheckBox> checkBoxes = new ArrayList<>();
 
-        CheckTabPanel(List<? extends CheckDescriptor<?>> descriptors) {
+        CheckTabPanel(List<CheckDescriptor> descriptors) {
             super(new BorderLayout(8, 8));
             this.descriptors = new ArrayList<>(descriptors);
 
@@ -411,7 +411,7 @@ public class LinterGuiFrame extends JFrame {
             listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
             listPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-            for (CheckDescriptor<?> d : descriptors) {
+            for (CheckDescriptor d : descriptors) {
                 JCheckBox cb = new JCheckBox(d.displayName());
                 cb.putClientProperty("descriptor", d);
                 checkBoxes.add(cb);
@@ -435,8 +435,8 @@ public class LinterGuiFrame extends JFrame {
             }
         }
 
-        List<CheckDescriptor<?>> getSelectedDescriptors() {
-            List<CheckDescriptor<?>> selected = new ArrayList<>();
+        List<CheckDescriptor> getSelectedDescriptors() {
+            List<CheckDescriptor> selected = new ArrayList<>();
             for (int i = 0; i < descriptors.size(); i++) {
                 if (checkBoxes.get(i).isSelected()) {
                     selected.add(descriptors.get(i));
