@@ -1,3 +1,5 @@
+package fixtures;
+
 import jakarta.json.Json;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonGeneratorFactory;
@@ -7,7 +9,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
-public class JsonSaverAdapter implements SaverInterface{
+public class JsonSaverAdapter implements SaverInterface {
 
     private JsonGenerator gen;
     private int count;

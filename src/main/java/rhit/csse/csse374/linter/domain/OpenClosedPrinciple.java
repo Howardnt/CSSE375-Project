@@ -20,10 +20,6 @@ public class OpenClosedPrinciple extends Principle {
     private static final int METHOD_VIOLATION_THRESHOLD = 3;
     private static final int RIGID_CLASS_THRESHOLD = 2;
 
-    public OpenClosedPrinciple() {
-        super("Open/Closed Principle");
-    }
-
     @Override
     public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();

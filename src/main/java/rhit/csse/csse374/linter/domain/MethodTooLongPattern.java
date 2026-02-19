@@ -46,6 +46,7 @@ public class MethodTooLongPattern extends Cursory {
         return violations;
     }
 
+
     private List<Violation> analyzeMethod(ASMMethod method) {
         List<Violation> violations = new ArrayList<>();
 

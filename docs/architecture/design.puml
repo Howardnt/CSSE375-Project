@@ -43,6 +43,10 @@ class OpenClosedPrinciple extends Principle{
 
 
 abstract class Pattern implements LintCheck{
++run(project: ASMProject): CheckResult
+#runPatternCheck(project: ASMProject): CheckResult
++{abstract} isPattern(cls: ASMClass): boolean
++getDetails(cls: ASMClass): String
 }
 
 Class TemplatePattern extends Pattern{
@@ -52,6 +56,13 @@ Class StrategyPattern extends Pattern{
 Class DecoratorPattern extends Pattern{
 }
 Class AdapterPattern extends Pattern{
++name(): String
++getDetails(asmClass: ASMClass): String
++isPattern(asmClass: ASMClass): double
++getRatio(asmClass: ASMClass): double
++methodUsesField(method: ASMMethod, fieldOwner: String, fieldName: String): boolean
++findPotentialAdapteeFields(asmClass: ASMClass): List<FieldNode>
++getAdapteeFieldName((asmClass: ASMClass): String
 }
 
 interface LintCheck {

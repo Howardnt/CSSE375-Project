@@ -8,12 +8,6 @@ import java.util.List;
 
 public abstract class Principle implements LintCheck {
 
-    private final String principleName;
-
-    protected Principle(String principleName) {
-        this.principleName = principleName;
-    }
-
     public final CheckResult run(ASMProject project) {
         List<Violation> violations = new ArrayList<>();
         List<String> errors = new ArrayList<>();
