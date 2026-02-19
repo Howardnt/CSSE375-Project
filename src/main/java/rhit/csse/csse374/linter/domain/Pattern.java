@@ -44,7 +44,7 @@ public abstract class Pattern implements LintCheck {
                     if (!details.isEmpty()) {
                         message += " — " + details;
                     }
-                    violations.add(new Violation(message));
+                    violations.add(new Violation(message, "", "INFO"));
                 }
             } catch (Exception e) {
                 errors.add("Error analyzing " + cls.getClassName() + ": " + e.getMessage());

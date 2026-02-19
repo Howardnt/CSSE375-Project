@@ -2,11 +2,7 @@ package rhit.csse.csse374.linter.data;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.Analyzer;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicValue;
-import org.objectweb.asm.tree.analysis.Frame;
-import org.objectweb.asm.tree.analysis.SimpleVerifier;
+import org.objectweb.asm.tree.analysis.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +31,7 @@ public class ASMMethod {
         boolean succeeded = false;
 
         try {
-            SimpleVerifier verifier = new SimpleVerifier();
+            BasicInterpreter verifier = new BasicInterpreter();
             Analyzer<BasicValue> analyzer = new Analyzer<>(verifier);
             analyzedFrames = analyzer.analyze(className, methodNode);
             succeeded = true;

@@ -7,15 +7,42 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Fixture intended to be a clear SRP violation / god class for `singleResponsibilityPrinciple`.
+ * Fixture for {@code singleResponsibilityPrinciple} (SRP heuristic).
  *
- * It has:
- * - many fields (>= 8)
- * - many public methods (>= 10)
- * - low cohesion (methods touch disjoint subsets of fields)
- * - dependency fan-out (calls into several different Java packages)
+ * PASS: small, cohesive class where methods share the same small set of state.
+ * FAIL: "god class" with many fields, many public methods, low cohesion, and high dependency fan-out.
  */
-public class SrpGodClassFixture {
+public class SingleResponsibilityPrincipleFixture {
+    // This class is just a container for the PASS/FAIL examples below.
+}
+
+// ===== PASS (should NOT be flagged) =====
+class SrpGoodCohesiveExample {
+    private final List<String> items = new ArrayList<>();
+    private int count = 0;
+
+    public void addItem(String item) {
+        items.add(item);
+        count++;
+    }
+
+    public void removeItem(String item) {
+        if (items.remove(item)) {
+            count--;
+        }
+    }
+
+    public int size() {
+        return count;
+    }
+
+    public boolean contains(String item) {
+        return items.contains(item);
+    }
+}
+
+// ===== FAIL (should be flagged) =====
+class SrpBadGodClassExample {
 
     private String userName;
     private String userEmail;
@@ -28,7 +55,6 @@ public class SrpGodClassFixture {
     private int timeoutMs;
 
     public void loadUserFromDb() {
-        // touches user fields
         userName = "u";
         userEmail = "e";
         userRole = "r";
@@ -36,7 +62,6 @@ public class SrpGodClassFixture {
     }
 
     public void validateUser() {
-        // touches different fields
         admin = userRole != null && userRole.equals("admin");
         System.out.println(Instant.now());
     }
