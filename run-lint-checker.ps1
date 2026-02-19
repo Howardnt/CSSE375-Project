@@ -1,8 +1,4 @@
 param(
-  # Path to lint (directory containing .class files, searched recursively, or a single .class file).
-  # If not provided, defaults to "out" (the script's compilation output).
-  [string]$LintTarget = "",
-
   # If set, do not download ASM jars (assumes they already exist in lib/).
   [switch]$SkipDownload
 )
@@ -70,11 +66,7 @@ if ($allSources.Count -eq 0) {
 Write-Host "Compiling $($mainSources.Count) main + $($testSources.Count) test sources..."
 javac -cp $cp -d $outDir @allSources
 
-if ([string]::IsNullOrWhiteSpace($LintTarget)) {
-  $LintTarget = "out"
-}
-
 Write-Host ""
-Write-Host "Running ManualLintRunner against: $LintTarget"
-java -cp "out;lib/*" ManualLintRunner $LintTarget
+Write-Host "Launching Swing GUI..."
+java -cp "out;lib/*" rhit.csse.csse374.linter.presentation.gui.LinterGuiMain
 
