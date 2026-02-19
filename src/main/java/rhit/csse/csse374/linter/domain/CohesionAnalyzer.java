@@ -10,11 +10,7 @@ import rhit.csse.csse374.linter.data.Instruction;
 import java.util.*;
 
 public class CohesionAnalyzer extends Principle {
-
-    public CohesionAnalyzer() {
-        super("High Cohesion Principle (LCOM4)");
-    }
-
+    
     @Override
     public String name() {
         return "CohesionAnalyzer";

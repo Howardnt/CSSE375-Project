@@ -11,11 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PrincipleOfLeastKnowledge extends Principle {
-
-    public PrincipleOfLeastKnowledge() {
-        super("Principle of Least Knowledge (Law of Demeter)");
-    }
-
+    
      @Override
     public String name() {
         return "PrincipleOfLeastKnowledge";
