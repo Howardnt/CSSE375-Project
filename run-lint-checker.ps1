@@ -65,8 +65,14 @@ if ($allSources.Count -eq 0) {
 
 Write-Host "Compiling $($mainSources.Count) main + $($testSources.Count) test sources..."
 javac -cp $cp -d $outDir @allSources
+if ($LASTEXITCODE -ne 0) {
+  throw "javac failed with exit code $LASTEXITCODE"
+}
 
 Write-Host ""
 Write-Host "Launching Swing GUI..."
 java -cp "out;lib/*" rhit.csse.csse374.linter.presentation.gui.LinterGuiMain
+if ($LASTEXITCODE -ne 0) {
+  throw "java failed with exit code $LASTEXITCODE"
+}
 
