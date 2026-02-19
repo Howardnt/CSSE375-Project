@@ -1,13 +1,17 @@
 package rhit.csse.csse374.linter.domain;
 
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.Instruction;
 
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -31,6 +35,9 @@ public class HollywoodPrinciple extends Principle {
 
     private static final Set<String> EXCLUDED_METHODS = new HashSet<>(Arrays.asList(
             "<init>", "<clinit>", "equals", "hashCode", "toString"));
+
+    // Cache of resolved method signatures for high-level types
+    private final Map<String, Set<String>> resolvedMethodCache = new HashMap<>();
 
     public HollywoodPrinciple() {
         super("Hollywood Principle");
@@ -56,7 +63,10 @@ public class HollywoodPrinciple extends Principle {
             return violations;
         }
 
-        checkUpwardCalls(cls, highLevelTypes, violations);
+        // Resolve method signatures for each high-level type
+        Set<String> highLevelMethodSignatures = resolveHighLevelMethods(highLevelTypes);
+
+        checkUpwardCalls(cls, highLevelTypes, highLevelMethodSignatures, violations);
         checkUpwardInstantiation(cls, highLevelTypes, violations);
 
         return violations;
@@ -83,12 +93,57 @@ public class HollywoodPrinciple extends Principle {
     }
 
     /**
+     * Resolves the method signatures (name+descriptor) declared in each
+     * high-level type by loading their bytecode via the ClassLoader.
+     * This allows detection of self-calls (this.method()) where the method
+     * was originally declared in an interface or superclass.
+     */
+    private Set<String> resolveHighLevelMethods(Set<String> highLevelTypes) {
+        Set<String> allSignatures = new HashSet<>();
+
+        for (String typeName : highLevelTypes) {
+            // Check cache first
+            if (resolvedMethodCache.containsKey(typeName)) {
+                allSignatures.addAll(resolvedMethodCache.get(typeName));
+                continue;
+            }
+
+            Set<String> signatures = new HashSet<>();
+            try (InputStream is = ClassLoader.getSystemResourceAsStream(typeName + ".class")) {
+                if (is != null) {
+                    ClassReader reader = new ClassReader(is);
+                    ClassNode node = new ClassNode();
+                    reader.accept(node, ClassReader.SKIP_CODE);
+                    for (MethodNode m : node.methods) {
+                        if (!m.name.startsWith("<")) {
+                            signatures.add(m.name + m.desc);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Silently ignore — if we can't load the type, skip resolution
+            }
+
+            resolvedMethodCache.put(typeName, signatures);
+            allSignatures.addAll(signatures);
+        }
+
+        return allSignatures;
+    }
+
+    /**
      * Detects methods that make too many calls back up into the high-level
      * (abstract superclass / interface) types. This suggests the low-level
      * concrete class is "pulling" control rather than being invoked.
+     *
+     * Checks both direct upward calls (where the bytecode owner is the
+     * high-level type) AND self-calls (this.method()) where the method was
+     * originally declared in a high-level type.
      */
     private void checkUpwardCalls(ASMClass cls, Set<String> highLevelTypes,
-            List<Violation> violations) {
+            Set<String> highLevelMethodSignatures, List<Violation> violations) {
+        String currentClassName = cls.getClassNode().name;
+
         for (ASMMethod method : cls.getMethods()) {
             if (EXCLUDED_METHODS.contains(method.getMethodName())) {
                 continue;
@@ -101,9 +156,14 @@ public class HollywoodPrinciple extends Principle {
                 AbstractInsnNode insn = instruction.getInstruction();
                 if (insn instanceof MethodInsnNode) {
                     MethodInsnNode methodInsn = (MethodInsnNode) insn;
-                    if (highLevelTypes.contains(methodInsn.owner)
+
+                    boolean isDirectUpwardCall = highLevelTypes.contains(methodInsn.owner);
+                    boolean isSelfCallToHighLevelMethod = methodInsn.owner.equals(currentClassName)
+                            && highLevelMethodSignatures.contains(methodInsn.name + methodInsn.desc);
+
+                    if ((isDirectUpwardCall || isSelfCallToHighLevelMethod)
                             && !EXCLUDED_METHODS.contains(methodInsn.name)) {
-                        String key = methodInsn.owner + "." + methodInsn.name + methodInsn.desc;
+                        String key = methodInsn.name + methodInsn.desc;
                         if (calledMethods.add(key)) {
                             upwardCallCount++;
                         }
