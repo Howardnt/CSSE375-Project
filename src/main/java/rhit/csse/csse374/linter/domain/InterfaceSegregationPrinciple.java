@@ -13,10 +13,6 @@ public class InterfaceSegregationPrinciple extends Principle {
 
     private static final int EMPTY_METHOD_THRESHOLD = 2;
 
-    public InterfaceSegregationPrinciple() {
-        super("Interface Segregation Principle");
-    }
-
     @Override
     public String name() {
         return "ISP-Violation-Checker";

@@ -39,10 +39,6 @@ public class HollywoodPrinciple extends Principle {
     // Cache of resolved method signatures for high-level types
     private final Map<String, Set<String>> resolvedMethodCache = new HashMap<>();
 
-    public HollywoodPrinciple() {
-        super("Hollywood Principle");
-    }
-
     @Override
     public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();

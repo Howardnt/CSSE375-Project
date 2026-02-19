@@ -1,3 +1,5 @@
+package fixtures;
+
 import jakarta.json.JsonWriter;
 import jakarta.json.stream.*;
 import jakarta.json.stream.JsonParser.*;
@@ -6,7 +8,7 @@ import jakarta.json.JsonReader;
 
 import java.io.*;
 
-public class JsonLoaderAdapter implements LoaderInterface{
+public class JsonLoaderAdapter implements LoaderInterface {
 
     private final JsonParser parser;
     String next;

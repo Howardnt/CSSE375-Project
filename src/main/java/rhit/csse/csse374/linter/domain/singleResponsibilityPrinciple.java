@@ -22,10 +22,6 @@ public class singleResponsibilityPrinciple extends Principle {
     private static final double MIN_DISJOINT_RATIO = 0.5;
     private static final int MIN_DEPENDENCY_PACKAGES = 3;
 
-    public singleResponsibilityPrinciple() {
-        super("Single Responsibility Principle");
-    }
-
     @Override
     public String name() {
         return "SingleResponsibilityPrinciple";
@@ -39,6 +35,7 @@ public class singleResponsibilityPrinciple extends Principle {
         }
         return java.util.Collections.singletonList(v);
     }
+
 
     private Violation analyzeClass(ClassNode classNode) {
         @SuppressWarnings("unchecked")
