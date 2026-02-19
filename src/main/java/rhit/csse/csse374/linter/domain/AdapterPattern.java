@@ -95,20 +95,34 @@ public class AdapterPattern extends Pattern {
         return false;
     }
 
-    //any adaptee should be private and its own object
+    // Any adaptee should be private, its own object, and NOT the same type as an implemented interface
+    // (if it matches an interface, it's likely a Decorator, not an Adapter)
     private List<FieldNode> findPotentialAdapteeFields(ASMClass asmClass) {
         List<FieldNode> candidates = new ArrayList<>();
 
         for (FieldNode field : asmClass.getClassNode().fields) {
             boolean isPrivate = (field.access & Opcodes.ACC_PRIVATE) != 0;
             boolean isNonPrimitive = field.desc.startsWith("L");
+            boolean isNotDecoratorField = !fieldTypeMatchesInterface(asmClass, field);
 
-            if (isPrivate && isNonPrimitive) {
+            if (isPrivate && isNonPrimitive && isNotDecoratorField) {
                 candidates.add(field);
             }
         }
 
         return candidates;
+    }
+
+    // Returns true if the field's type matches any of the interfaces the class implements.
+    // This distinguishes Decorators (wrap same type as interface) from Adapters (wrap unrelated type).
+    private boolean fieldTypeMatchesInterface(ASMClass asmClass, FieldNode field) {
+        String fieldType = field.desc.replace("L", "").replace(";", "");
+        for (Object iface : asmClass.getClassNode().interfaces) {
+            if (iface.equals(fieldType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getAdapteeFieldName(ASMClass asmClass) {

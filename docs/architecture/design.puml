@@ -20,6 +20,7 @@ Class LinterHandler{
 
 class ConvertToASM{
 -projectLocation: String
++ConvertToASM(projectLocation: String)
 +toASMProject(): ASMProject
 +loadClassesFromPath(path: String): List<ClassNode>
 +findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
@@ -28,17 +29,33 @@ class ConvertToASM{
 }
 
 abstract class Cursory implements LintCheck{
++run(project: ASMProject): CheckResult
++{abstract}checkClass(cls: ASMClass): List<Violation>
 }
 
-Class EqualsChecker extends Cursory{
+class EqualsChecker extends Cursory{
++checkClass(cls: ASMClass): List<Violation>
+-checkInstruction(instruction: Instruction, method: ASMMethod): Violation
+-isProblematicType(type: Type): boolean
++name(): String
+
 }
-Class CamelCaseChecker extends Cursory{
+class CamelCaseChecker extends Cursory{
 }
 
 abstract class Principle implements LintCheck{
++run(project: ASMProject): CheckResult
++{abstract}checkClass(cls: ASMClass): List<Violation>
 }
 
 class OpenClosedPrinciple extends Principle{
+-{static}METHOD_VIOLATION_THRESHOLD: int
+-{static}RIGID_CLASS_THRESHOLD: int
++checkClass(cls: ASMClass): List<Violation>
+-checkTypeCheckingLogic(cls: ASMClass, violations: List<Violation>)
+-checkStructuralRigidity(cls: ASMClass, violations: List<Violation>)
+-countTypeCheckingOpcodes(method: ASMMethod): int
++name(): String
 }
 
 
@@ -49,20 +66,21 @@ abstract class Pattern implements LintCheck{
 +getDetails(cls: ASMClass): String
 }
 
-Class TemplatePattern extends Pattern{
+class TemplatePattern extends Pattern{
 }
-Class StrategyPattern extends Pattern{
+class StrategyPattern extends Pattern{
 }
-Class DecoratorPattern extends Pattern{
+class DecoratorPattern extends Pattern{
 }
-Class AdapterPattern extends Pattern{
+class AdapterPattern extends Pattern{
 +name(): String
 +getDetails(asmClass: ASMClass): String
 +isPattern(asmClass: ASMClass): double
-+getRatio(asmClass: ASMClass): double
-+methodUsesField(method: ASMMethod, fieldOwner: String, fieldName: String): boolean
-+findPotentialAdapteeFields(asmClass: ASMClass): List<FieldNode>
-+getAdapteeFieldName((asmClass: ASMClass): String
+-getRatio(asmClass: ASMClass): double
+-methodUsesField(method: ASMMethod, fieldOwner: String, fieldName: String): boolean
+-findPotentialAdapteeFields(asmClass: ASMClass): List<FieldNode>
+-getAdapteeFieldName(asmClass: ASMClass): String
+-fieldTypeMatchesInterfaces(asmClass: ASMClass, field: FieldNode)
 }
 
 interface LintCheck {
@@ -73,6 +91,8 @@ class Violation{
 -message: String
 -location: String
 -severity: String
++Violation(method: String, location: String)
++Violation(method: String)
 }
 
 class CheckResult{
@@ -81,6 +101,7 @@ class CheckResult{
 -methodsChecked: int
 -analysisErrors: List<String>
 -type: String
++CheckResult(violations: List<Violation>, classesChecked: int, methodsChecked: int, analysisErrors: List<String>, type: String)
 }
 
 class LinterResult{
@@ -92,6 +113,10 @@ class LinterResult{
 -principleCheckCount: int
 -patternCheckCount: int
 -projectPath: String
++hasAnyViolations(): boolean
++getTotalViolationCount(): int
++hasViolationsIn(results: List<CheckResult>): boolean
++countViolations(results: List<CheckResult>): int
 }
 }
 
@@ -101,6 +126,7 @@ class ASMClass {
 -className: String
 -classNode: ClassNode
 -methods: List<ASMMethod>
++ASMClass(classNode: ClassNode)
 }
 
 class ASMMethod {
@@ -111,17 +137,24 @@ class ASMMethod {
 -instructions: List<Instruction>
 -analysisSucceeded: boolean
 -analysisError: String
++ASMMethod(className: String, methodNode: MethodNode)
++buildInstructions(methodNode: MethodNode, frame: Frame<BasicValue>[]): List<Instruction>
 }
 
 class ASMProject {
 -projectPath: String
 -classes: List<ASMClass>
++ASMProject(projectPath: String, classNodes: List<ClassNode>)
 }
 
 class Instruction {
 -instruction: AbstractInsnNode
 -frame: Frame
 -index: int
++Instruction(instruction: AbstractInsnNode, frame: Frame<BasicValue>, index: int)
++isReferenceComparison(): boolean
++getStackValue(positionFromTop: int): BasicValue
++getTopTwoStackValues(): StackValuePair
 }
 
 class StackValuePair {
