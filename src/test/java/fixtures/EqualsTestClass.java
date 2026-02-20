@@ -1,0 +1,102 @@
+package fixtures;
+
+import java.util.ArrayList;
+import java.util.List;
+
+//Jack Traversa (with Claude assistance in accordance with the requirements document)
+public class EqualsTestClass {
+
+    // Should be flagged - String comparison with ==
+    public boolean badStringComparison(String s1, String s2) {
+        if (s1 == s2) {  // BAD - should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Should NOT be flagged - null check is legitimate
+    public boolean goodNullCheck(String s) {
+        if (s == null) {  // GOOD - null check is fine
+            return true;
+        }
+        return false;
+    }
+
+    // Should be flagged - Integer wrapper comparison
+    public boolean badIntegerComparison(Integer i1, Integer i2) {
+        if (i1 == i2) {  // BAD - boxed integers should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Should NOT be flagged - primitive int comparison
+    public boolean goodPrimitiveComparison(int i1, int i2) {
+        if (i1 == i2) {  // GOOD - primitives are fine with ==
+            return true;
+        }
+        return false;
+    }
+
+    // Should be flagged - List comparison
+    public boolean badListComparison(List<String> list1, List<String> list2) {
+        if (list1 == list2) {  // BAD - should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Should be flagged - ArrayList comparison
+    public boolean badArrayListComparison(ArrayList<String> list1, ArrayList<String> list2) {
+        if (list1 == list2) {  // BAD - should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Should be flagged - Boolean wrapper comparison
+    public boolean badBooleanComparison(Boolean b1, Boolean b2) {
+        if (b1 == b2) {  // BAD - should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Should NOT be flagged - boolean primitive comparison
+    public boolean goodBooleanPrimitiveComparison(boolean b1, boolean b2) {
+        if (b1 == b2) {  // GOOD - primitives are fine
+            return true;
+        }
+        return false;
+    }
+
+    // Should NOT be flagged - null check on Integer
+    public boolean goodIntegerNullCheck(Integer i) {
+        if (i == null) {  // GOOD - null check
+            return true;
+        }
+        return false;
+    }
+
+    // Should be flagged - comparing with literal string
+    public boolean badStringLiteralComparison(String input) {
+        if (input == "hello") {  // BAD - should use .equals()
+            return true;
+        }
+        return false;
+    }
+
+    // Mixed good and bad
+    public String mixedExample(String s1, String s2, Integer i1, Integer i2) {
+        if (s1 == null) {  // GOOD
+            return "null";
+        }
+        if (s1 == s2) {  // BAD
+            return "same";
+        }
+        if (i1 == i2) {  // BAD
+            return "equal numbers";
+        }
+        return "different";
+    }
+}
