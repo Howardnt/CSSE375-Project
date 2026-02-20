@@ -65,7 +65,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>rhit.csse.csse374.linter.presentation.Main</mainClass>
+							<mainClass>rhit.csse.csse374.linter.presentation.gui.LinterGuiMain</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

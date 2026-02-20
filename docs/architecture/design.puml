@@ -1,18 +1,11 @@
 @startuml
 package "Presentation" as presentation {
-  together {
-    class Main {
-      +main(args: String[]): void
-    }
     class LinterOutputText {
       -lines: List<String>
       +formatResult(result: LinterResult): void
       +toString(): String
     }
-  }
 
-  package "GUI" as gui {
-    together {
       class LinterGuiMain {
         +main(args: String[]): void
       }
@@ -29,14 +22,12 @@ package "Presentation" as presentation {
         +RunLinterWorker(...)
         #doInBackground(): RunResult
       }
-    }
 
-    together {
       class CheckCatalog {
         {static} -cachedAll: List<CheckDescriptor>
         {static} +allChecks(): List<CheckDescriptor>
       }
-      enum "CheckCatalog.Category" as Category {
+      enum CheckCatalogCategory{
         CURSORY
         PRINCIPLE
         PATTERN
@@ -60,8 +51,6 @@ package "Presentation" as presentation {
         +checkName: String
         +violations: List<Violation>
       }
-    }
-  }
 }
 
 package domain{
@@ -333,9 +322,6 @@ class StackValuePair {
 
 
 ' Presentation to Domain
-Main -down-> ConvertToASM
-Main -down-> LinterHandler
-Main -down-> LinterOutputText
 LinterOutputText ..up> LinterResult
 
 ' Domain to Data
@@ -353,12 +339,6 @@ ASMMethod --> "*" Instruction
 Instruction ..> StackValuePair
 ConvertToASM ..> ASMProject
 
-' Presentation → Domain
-Main --> ConvertToASM
-Main --> LinterHandler
-Main --> LinterOutputText
-LinterOutputText ..> LinterResult
-
 ' GUI wiring (Presentation)
 LinterGuiMain --> LinterGuiFrame
 LinterGuiFrame --> CheckCatalog
@@ -375,9 +355,10 @@ RunLinterWorker ..> LinterResult
 RunLinterWorker ..> RunResult
 
 ResultsAccordionPanel ..> Violation
-ResultsAccordionPanel *--> "0..*" CheckGroup
+ResultsAccordionPanel --> "0..*" CheckGroup
 CheckCatalog ..> LintCheck
-CheckCatalog *--> "0..*" CheckDescriptor
+CheckCatalog --> "0..*" CheckDescriptor
 CheckDescriptor ..> LintCheck
+CheckCatalog ..> CheckCatalogCategory
 
 @enduml
