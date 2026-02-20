@@ -42,6 +42,15 @@ class EqualsChecker extends Cursory{
 }
 class CamelCaseChecker extends Cursory{
 }
+class PascalClassName extends Cursory{
++name(): String
++checkClass(asmClass: ASMClass): List<Violation>
+-makeViolation(fullInternalName: String, simpleName: String, reason: String): Violation
+-getPackageName(fullInternalName: String): String
+-getSimpleClassName(fullName: String): String
+-isPascalCase(name: String): boolean
+-describeViolation(name: String): String
+}
 
 abstract class Principle implements LintCheck{
 +run(project: ASMProject): CheckResult
@@ -57,6 +66,17 @@ class OpenClosedPrinciple extends Principle{
 -countTypeCheckingOpcodes(method: ASMMethod): int
 +name(): String
 }
+class HollywoodPrinciple extends Principle{
+-{static}UPWARD_CALL_THRESHOLD: int
+-{static}EXCLUDED_METHODS: Set<String>
+-resolvedMethodCache: Map<String, Set<String>>
++checkClass(cls: ASMClass): List<Violation>
+-collectHighLevelTypes(cls: ASMClass): Set<String>
+-resolveHighLevelMethods(highLevelTypes: Set<String>): Set<String>
+-checkUpwardCalls(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>, violations: List<Violation>): void
+-checkUpwardInstantiation(cls: ASMClass, highLevelTypes: Set<String>, violations: List<Violation>): void
++name(): String
+}
 
 
 abstract class Pattern implements LintCheck{
@@ -67,6 +87,14 @@ abstract class Pattern implements LintCheck{
 }
 
 class TemplatePattern extends Pattern{
+-detectedPatterns: List<TemplateMethodInfo>
++TemplatePattern()
++name(): String
+#runPatternCheck(project: ASMProject): CheckResult
+#isPattern(cls: ASMClass): boolean
+-analyzeTemplateMethod(classNode: ClassNode, method: MethodNode): TemplateMethodInfo
++getDetectedPatterns(): List<TemplateMethodInfo>
++getDetailedMessage(className: String): String
 }
 class StrategyPattern extends Pattern{
 }
