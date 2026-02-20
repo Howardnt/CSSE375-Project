@@ -1,267 +1,246 @@
 @startuml
-package presentation{
-Class Main{
-}
+'
+' Hand-authored architecture skeleton (kept intentionally high-level).
+' Layers flow left-to-right: Presentation → Domain → Data.
+'
 
-class LinterOutputText{
-}
+left to right direction
 
-}
-
-package domain{
-
-Class LinterHandler{
-- checks: List<LintCheck>
-- project: ASMProject
-
-+runLinterAnalysis(): LinterResult
-+runChecks(checks: List<LintCheck>): List<CheckResult>
-}
-
-class ConvertToASM{
--projectLocation: String
-+ConvertToASM(projectLocation: String)
-+toASMProject(): ASMProject
-+loadClassesFromPath(path: String): List<ClassNode>
-+findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
-+loadClassFile(classFile: File): ClassNode
-
-}
-
-abstract class Cursory implements LintCheck{
-+run(project: ASMProject): CheckResult
-+{abstract}checkClass(cls: ASMClass): List<Violation>
-}
-
-class EqualsChecker extends Cursory{
-+checkClass(cls: ASMClass): List<Violation>
--checkInstruction(instruction: Instruction, method: ASMMethod): Violation
--isProblematicType(type: Type): boolean
-+name(): String
-
-}
-class CamelCaseChecker extends Cursory{
-}
-class PascalClassName extends Cursory{
-+name(): String
-+checkClass(asmClass: ASMClass): List<Violation>
--makeViolation(fullInternalName: String, simpleName: String, reason: String): Violation
--getPackageName(fullInternalName: String): String
--getSimpleClassName(fullName: String): String
--isPascalCase(name: String): boolean
--describeViolation(name: String): String
-}
-
-abstract class Principle implements LintCheck{
-+run(project: ASMProject): CheckResult
-+{abstract}checkClass(cls: ASMClass): List<Violation>
-}
-
-class OpenClosedPrinciple extends Principle{
--{static}METHOD_VIOLATION_THRESHOLD: int
--{static}RIGID_CLASS_THRESHOLD: int
-+checkClass(cls: ASMClass): List<Violation>
--checkTypeCheckingLogic(cls: ASMClass, violations: List<Violation>)
--checkStructuralRigidity(cls: ASMClass, violations: List<Violation>)
--countTypeCheckingOpcodes(method: ASMMethod): int
-+name(): String
-}
-class HollywoodPrinciple extends Principle{
--strategy: HollywoodStrategy
--resolvedMethodCache: Map<String, Set<String>>
-+HollywoodPrinciple()
-+HollywoodPrinciple(strategy: HollywoodStrategy)
-+checkClass(cls: ASMClass): List<Violation>
--collectHighLevelTypes(cls: ASMClass): Set<String>
--resolveHighLevelMethods(highLevelTypes: Set<String>): Set<String>
-+name(): String
-}
-
-interface HollywoodStrategy {
-+analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
-}
-
-class StrictHollywoodStrategy implements HollywoodStrategy {
--{static}EXCLUDED_METHODS: Set<String>
-+analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
-}
-
-class ThresholdHollywoodStrategy implements HollywoodStrategy {
--threshold: int
--{static}EXCLUDED_METHODS: Set<String>
-+ThresholdHollywoodStrategy(threshold: int)
-+analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
-}
-
-class InstantiationOnlyStrategy implements HollywoodStrategy {
--{static}EXCLUDED_METHODS: Set<String>
-+analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
-}
-
-class HollywoodStrictPrinciple extends HollywoodPrinciple {
-+HollywoodStrictPrinciple()
-+name(): String
-}
-
-class HollywoodInstantiationPrinciple extends HollywoodPrinciple {
-+HollywoodInstantiationPrinciple()
-+name(): String
-}
-
-class HollywoodThresholdPrinciple extends HollywoodPrinciple {
-+HollywoodThresholdPrinciple()
-+name(): String
-}
-
-note "Wrapper classes strictly for GUI compatibility" as GuiNote
-HollywoodStrictPrinciple .. GuiNote
-HollywoodInstantiationPrinciple .. GuiNote
-HollywoodThresholdPrinciple .. GuiNote
-
-HollywoodPrinciple o-down-> HollywoodStrategy
-
-
-
-abstract class Pattern implements LintCheck{
-+run(project: ASMProject): CheckResult
-#runPatternCheck(project: ASMProject): CheckResult
-+{abstract} isPattern(cls: ASMClass): boolean
-+getDetails(cls: ASMClass): String
-}
-
-class TemplatePattern extends Pattern{
--detectedPatterns: List<TemplateMethodInfo>
-+TemplatePattern()
-+name(): String
-#runPatternCheck(project: ASMProject): CheckResult
-#isPattern(cls: ASMClass): boolean
--analyzeTemplateMethod(classNode: ClassNode, method: MethodNode): TemplateMethodInfo
-+getDetectedPatterns(): List<TemplateMethodInfo>
-+getDetailedMessage(className: String): String
-}
-class StrategyPattern extends Pattern{
-}
-class DecoratorPattern extends Pattern{
-}
-class AdapterPattern extends Pattern{
-+name(): String
-+getDetails(asmClass: ASMClass): String
-+isPattern(asmClass: ASMClass): double
--getRatio(asmClass: ASMClass): double
--methodUsesField(method: ASMMethod, fieldOwner: String, fieldName: String): boolean
--findPotentialAdapteeFields(asmClass: ASMClass): List<FieldNode>
--getAdapteeFieldName(asmClass: ASMClass): String
--fieldTypeMatchesInterfaces(asmClass: ASMClass, field: FieldNode)
-}
-
-interface LintCheck {
-+run(project: ASMProject): CheckResult
-}
-
-class Violation{
--message: String
--location: String
--severity: String
-+Violation(method: String, location: String)
-+Violation(method: String)
-}
-
-class CheckResult{
--violations: List<Violations>
--classesChecked: int
--methodsChecked: int
--analysisErrors: List<String>
--type: String
-+CheckResult(violations: List<Violation>, classesChecked: int, methodsChecked: int, analysisErrors: List<String>, type: String)
-}
-
-class LinterResult{
--cursoryResult: List<CheckResult>
--principleResult: List<CheckResult>
--patternResult: List<CheckResult>
--totalClasses: int
--cursoryCheckCount: int
--principleCheckCount: int
--patternCheckCount: int
--projectPath: String
-+hasAnyViolations(): boolean
-+getTotalViolationCount(): int
-+hasViolationsIn(results: List<CheckResult>): boolean
-+countViolations(results: List<CheckResult>): int
-}
-}
-
-package data{
-
-class ASMClass {
--className: String
--classNode: ClassNode
--methods: List<ASMMethod>
-+ASMClass(classNode: ClassNode)
-}
-
-class ASMMethod {
--className: String
--methodName: String
--methodNode: MethodNode
--frames: Frame
--instructions: List<Instruction>
--analysisSucceeded: boolean
--analysisError: String
-+ASMMethod(className: String, methodNode: MethodNode)
-+buildInstructions(methodNode: MethodNode, frame: Frame<BasicValue>[]): List<Instruction>
-}
-
-class ASMProject {
--projectPath: String
--classes: List<ASMClass>
-+ASMProject(projectPath: String, classNodes: List<ClassNode>)
-}
-
-class Instruction {
--instruction: AbstractInsnNode
--frame: Frame
--index: int
-+Instruction(instruction: AbstractInsnNode, frame: Frame<BasicValue>, index: int)
-+isReferenceComparison(): boolean
-+getStackValue(positionFromTop: int): BasicValue
-+getTopTwoStackValues(): StackValuePair
-}
-
-class StackValuePair {
--first: BasicValue
--second: BasicValue
-+eitherIsNull(): boolean
-+bothHaveType(): boolean
-+getFirstType(): Type
-+getSecondType(): Type
-+isNullValue(): boolean
-}
-}
-
-' Layout Hints
 skinparam linetype ortho
-skinparam nodesep 50
-skinparam ranksep 50
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classAttributeIconSize 0
 
-' Presentation to Domain
-Main -down-> ConvertToASM
-Main -down-> LinterHandler
-Main -down-> LinterOutputText
-LinterOutputText ..up> LinterResult
+package "Presentation" as presentation {
+  together {
+    class Main {
+      +main(args: String[]): void
+    }
+    class LinterOutputText {
+      -lines: List<String>
+      +formatResult(result: LinterResult): void
+      +toString(): String
+    }
+  }
 
-' Domain to Data
-LinterHandler -down-> ASMProject
-LinterHandler -right-> "*" LintCheck
+  package "GUI" as gui {
+    together {
+      class LinterGuiMain {
+        +main(args: String[]): void
+      }
+      class LinterGuiFrame {
+        -targetPathField: JTextField
+        -runButton: JButton
+        -progressBar: JProgressBar
+        -activeWorker: RunLinterWorker
+        +LinterGuiFrame()
+        -onRun(): void
+      }
+      class RunLinterWorker {
+        -projectPath: String
+        +RunLinterWorker(...)
+        #doInBackground(): RunResult
+      }
+    }
+
+    together {
+      class CheckCatalog {
+        {static} -cachedAll: List<CheckDescriptor>
+        {static} +allChecks(): List<CheckDescriptor>
+      }
+      enum "CheckCatalog.Category" as Category {
+        CURSORY
+        PRINCIPLE
+        PATTERN
+      }
+      class "CheckCatalog.CheckDescriptor" as CheckDescriptor {
+        +displayName: String
+        +category: Category
+        +defaultSelected: boolean
+        +create(): LintCheck
+      }
+      class DefaultTargetLocator {
+        {static} +findDefaultOutputDir(): String
+      }
+      class ResultsAccordionPanel {
+        +setGroups(groups: List<CheckGroup>): void
+      }
+      class "RunLinterWorker.RunResult" as RunResult {
+        +result: LinterResult
+      }
+      class "ResultsAccordionPanel.CheckGroup" as CheckGroup {
+        +checkName: String
+        +violations: List<Violation>
+      }
+    }
+  }
+}
+
+package "Domain" as domain {
+  together {
+    class ConvertToASM {
+      -projectLocation: String
+      +toASMProject(): ASMProject
+    }
+    class LinterHandler {
+      -project: ASMProject
+      +runLinterAnalysis(): LinterResult
+    }
+  }
+
+  together {
+    interface LintCheck {
+      +name(): String
+      +run(project: ASMProject): CheckResult
+    }
+    abstract class Cursory {
+      +{abstract} checkClass(cls: ASMClass): List<Violation>
+    }
+    abstract class Principle {
+      +{abstract} checkClass(cls: ASMClass): List<Violation>
+    }
+    abstract class Pattern {
+      #runPatternCheck(project: ASMProject): CheckResult
+      +{abstract} isPattern(cls: ASMClass): boolean
+    }
+  }
+
+  together {
+    class LinterResult {
+      -totalClasses: int
+      -projectPath: String
+      +getTotalClasses(): int
+      +getProjectPath(): String
+      +getTotalViolationCount(): int
+    }
+    class CheckResult {
+      -violations: List<Violation>
+      -type: String
+      +hasViolations(): boolean
+      +getViolations(): List<Violation>
+      +toString(): String
+    }
+    class Violation {
+      -message: String
+      -location: String
+      -severity: String
+      +getMessage(): String
+      +getSeverity(): String
+    }
+  }
+
+  together {
+    class HollywoodPrinciple
+    interface HollywoodStrategy
+    class ThresholdHollywoodStrategy
+    class StrictHollywoodStrategy
+    class InstantiationOnlyStrategy
+
+    class HollywoodStrictPrinciple
+    class HollywoodInstantiationPrinciple
+    class HollywoodThresholdPrinciple
+  }
+
+  note "Wrapper classes strictly for GUI compatibility" as GuiNote
+  HollywoodStrictPrinciple .. GuiNote
+  HollywoodInstantiationPrinciple .. GuiNote
+  HollywoodThresholdPrinciple .. GuiNote
+}
+
+package "Data" as data {
+  together {
+    class ASMProject {
+      -projectPath: String
+      -classes: List<ASMClass>
+      +getProjectPath(): String
+      +getClasses(): List<ASMClass>
+    }
+    class ASMClass {
+      -className: String
+      +getClassName(): String
+      +getMethods(): List<ASMMethod>
+    }
+    class ASMMethod {
+      -methodName: String
+      +getInstructions(): List<Instruction>
+      +getInstructionsWithTypeInfo(): List<Instruction>
+      +isTypeInfoAvailable(): boolean
+    }
+  }
+
+  together {
+    class Instruction {
+      -index: int
+      +isReferenceComparison(): boolean
+      +getTopTwoStackValues(): StackValuePair
+    }
+    class StackValuePair {
+      +eitherIsNull(): boolean
+      +bothHaveType(): boolean
+    }
+  }
+}
+
+' Layer ordering hints (keeps packages aligned as columns)
+presentation -[hidden]-> domain
+domain -[hidden]-> data
+
+' Presentation → Domain
+Main --> ConvertToASM
+Main --> LinterHandler
+Main --> LinterOutputText
+LinterOutputText ..> LinterResult
+
+' GUI wiring (Presentation)
+LinterGuiMain --> LinterGuiFrame
+LinterGuiFrame --> CheckCatalog
+LinterGuiFrame --> DefaultTargetLocator
+LinterGuiFrame --> RunLinterWorker
+LinterGuiFrame --> ResultsAccordionPanel
+LinterGuiFrame ..> LinterResult
+LinterGuiFrame ..> CheckDescriptor
+
+RunLinterWorker --> ConvertToASM
+RunLinterWorker --> LinterHandler
+RunLinterWorker --> LinterOutputText
+RunLinterWorker ..> LinterResult
+RunLinterWorker ..> RunResult
+
+ResultsAccordionPanel ..> Violation
+ResultsAccordionPanel *--> "0..*" CheckGroup
+CheckCatalog ..> LintCheck
+CheckCatalog *--> "0..*" CheckDescriptor
+CheckDescriptor ..> LintCheck
+
+' Domain internals
+ConvertToASM --> ASMProject
+LinterHandler --> ASMProject
+LinterHandler --> "0..*" LintCheck
 LinterHandler ..> LinterResult
 
-CheckResult --> "*" Violation
-LinterResult *--> "*" CheckResult
+Cursory ..|> LintCheck
+Principle ..|> LintCheck
+Pattern ..|> LintCheck
 
-' Data Layer Internal
-ASMProject *--> "*" ASMClass
-ASMClass *--> "*" ASMMethod
-ASMMethod *--> "*" Instruction
+HollywoodPrinciple --|> Principle
+HollywoodPrinciple o--> HollywoodStrategy
+ThresholdHollywoodStrategy ..|> HollywoodStrategy
+StrictHollywoodStrategy ..|> HollywoodStrategy
+InstantiationOnlyStrategy ..|> HollywoodStrategy
+
+HollywoodStrictPrinciple --|> HollywoodPrinciple
+HollywoodInstantiationPrinciple --|> HollywoodPrinciple
+HollywoodThresholdPrinciple --|> HollywoodPrinciple
+
+LinterResult *--> "0..*" CheckResult
+CheckResult *--> "0..*" Violation
+
+' Data internals
+ASMProject *--> "0..*" ASMClass
+ASMClass *--> "0..*" ASMMethod
+ASMMethod *--> "0..*" Instruction
 Instruction ..> StackValuePair
 
 @enduml
