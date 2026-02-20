@@ -67,16 +67,59 @@ class OpenClosedPrinciple extends Principle{
 +name(): String
 }
 class HollywoodPrinciple extends Principle{
--{static}UPWARD_CALL_THRESHOLD: int
--{static}EXCLUDED_METHODS: Set<String>
+-strategy: HollywoodStrategy
 -resolvedMethodCache: Map<String, Set<String>>
++HollywoodPrinciple()
++HollywoodPrinciple(strategy: HollywoodStrategy)
 +checkClass(cls: ASMClass): List<Violation>
 -collectHighLevelTypes(cls: ASMClass): Set<String>
 -resolveHighLevelMethods(highLevelTypes: Set<String>): Set<String>
--checkUpwardCalls(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>, violations: List<Violation>): void
--checkUpwardInstantiation(cls: ASMClass, highLevelTypes: Set<String>, violations: List<Violation>): void
 +name(): String
 }
+
+interface HollywoodStrategy {
++analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
+}
+
+class StrictHollywoodStrategy implements HollywoodStrategy {
+-{static}EXCLUDED_METHODS: Set<String>
++analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
+}
+
+class ThresholdHollywoodStrategy implements HollywoodStrategy {
+-threshold: int
+-{static}EXCLUDED_METHODS: Set<String>
++ThresholdHollywoodStrategy(threshold: int)
++analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
+}
+
+class InstantiationOnlyStrategy implements HollywoodStrategy {
+-{static}EXCLUDED_METHODS: Set<String>
++analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
+}
+
+class HollywoodStrictPrinciple extends HollywoodPrinciple {
++HollywoodStrictPrinciple()
++name(): String
+}
+
+class HollywoodInstantiationPrinciple extends HollywoodPrinciple {
++HollywoodInstantiationPrinciple()
++name(): String
+}
+
+class HollywoodThresholdPrinciple extends HollywoodPrinciple {
++HollywoodThresholdPrinciple()
++name(): String
+}
+
+note "Wrapper classes strictly for GUI compatibility" as GuiNote
+HollywoodStrictPrinciple .. GuiNote
+HollywoodInstantiationPrinciple .. GuiNote
+HollywoodThresholdPrinciple .. GuiNote
+
+HollywoodPrinciple o-down-> HollywoodStrategy
+
 
 
 abstract class Pattern implements LintCheck{
@@ -196,22 +239,29 @@ class StackValuePair {
 }
 }
 
-ASMProject -r-> "*" ASMClass
-ASMClass -d-> "*" ASMMethod
-ASMMethod -l-> "*" Instruction
-Instruction ..> StackValuePair
+' Layout Hints
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
 
-Main --> ConvertToASM
-Main --> LinterHandler
-Main --> LinterOutputText
+' Presentation to Domain
+Main -down-> ConvertToASM
+Main -down-> LinterHandler
+Main -down-> LinterOutputText
+LinterOutputText ..up> LinterResult
 
-LinterHandler --> ASMProject
-LinterHandler --> "*" LintCheck
+' Domain to Data
+LinterHandler -down-> ASMProject
+LinterHandler -right-> "*" LintCheck
 LinterHandler ..> LinterResult
 
 CheckResult --> "*" Violation
-LinterResult --> "*" CheckResult
+LinterResult *--> "*" CheckResult
 
-LinterOutputText ..> LinterResult
+' Data Layer Internal
+ASMProject *--> "*" ASMClass
+ASMClass *--> "*" ASMMethod
+ASMMethod *--> "*" Instruction
+Instruction ..> StackValuePair
 
 @enduml

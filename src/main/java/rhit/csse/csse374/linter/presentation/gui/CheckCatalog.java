@@ -24,7 +24,8 @@ import java.lang.reflect.Modifier;
 /**
  * Central registry of checks exposed by the GUI.
  *
- * This uses lightweight runtime discovery (classpath scanning) so that adding/renaming checks
+ * This uses lightweight runtime discovery (classpath scanning) so that
+ * adding/renaming checks
  * does not require updating a hardcoded list in the GUI.
  */
 public final class CheckCatalog {
@@ -49,8 +50,7 @@ public final class CheckCatalog {
             String displayName,
             Category category,
             boolean defaultSelected,
-            Supplier<LintCheck> supplier
-    ) {
+            Supplier<LintCheck> supplier) {
         public LintCheck create() {
             return supplier.get();
         }
@@ -204,7 +204,8 @@ public final class CheckCatalog {
             }
             if (clazz.getName().equals(Cursory.class.getName())
                     || clazz.getName().equals(Principle.class.getName())
-                    || clazz.getName().equals(Pattern.class.getName())) {
+                    || clazz.getName().equals(Pattern.class.getName())
+                    || clazz.getName().equals(HollywoodPrinciple.class.getName())) {
                 return null;
             }
 
@@ -265,4 +266,3 @@ public final class CheckCatalog {
         return null;
     }
 }
-

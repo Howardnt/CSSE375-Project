@@ -46,7 +46,10 @@ public class Main {
         List<Principle> principles = new ArrayList<>();
         // add all principle checks
         principles.add(new OpenClosedPrinciple());
-        principles.add(new HollywoodPrinciple());
+        // Use the Threshold Strategy by default for backwards compatibility
+        principles.add(new HollywoodPrinciple(new ThresholdHollywoodStrategy(3)));
+        principles.add(new HollywoodPrinciple(new InstantiationOnlyStrategy()));
+        principles.add(new HollywoodPrinciple(new StrictHollywoodStrategy()));
 
         List<Pattern> patterns = new ArrayList<>();
         patterns.add(new StrategyPattern());

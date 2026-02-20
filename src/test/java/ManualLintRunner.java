@@ -48,7 +48,9 @@ public class ManualLintRunner {
         List<Principle> principles = new ArrayList<>();
         principles.add(new OpenClosedPrinciple());
         principles.add(new singleResponsibilityPrinciple());
-        // principles.add(...);
+        principles.add(new HollywoodPrinciple(new ThresholdHollywoodStrategy(3)));
+        principles.add(new HollywoodPrinciple(new InstantiationOnlyStrategy()));
+        principles.add(new HollywoodPrinciple(new StrictHollywoodStrategy()));
 
         List<Pattern> patterns = new ArrayList<>();
         patterns.add(new StrategyPattern());
