@@ -239,10 +239,6 @@ class StackValuePair {
 }
 }
 
-' Layout Hints
-skinparam linetype ortho
-skinparam nodesep 50
-skinparam ranksep 50
 
 ' Presentation to Domain
 Main -down-> ConvertToASM
@@ -256,12 +252,13 @@ LinterHandler -right-> "*" LintCheck
 LinterHandler ..> LinterResult
 
 CheckResult --> "*" Violation
-LinterResult *--> "*" CheckResult
+LinterResult --> "*" CheckResult
 
 ' Data Layer Internal
-ASMProject *--> "*" ASMClass
-ASMClass *--> "*" ASMMethod
-ASMMethod *--> "*" Instruction
+ASMProject --> "*" ASMClass
+ASMClass --> "*" ASMMethod
+ASMMethod --> "*" Instruction
 Instruction ..> StackValuePair
+ConvertToASM ..> ASMProject
 
 @enduml
