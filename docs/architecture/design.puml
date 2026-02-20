@@ -242,5 +242,6 @@ ASMProject *--> "0..*" ASMClass
 ASMClass *--> "0..*" ASMMethod
 ASMMethod *--> "0..*" Instruction
 Instruction ..> StackValuePair
+ConvertToASM ..> ASMProject
 
 @enduml
