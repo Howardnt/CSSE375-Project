@@ -1,11 +1,11 @@
 package rhit.csse.csse374.linter.data;
 
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Represents a single class with its methods ready for analysis.
@@ -33,6 +33,17 @@ public class ASMClass {
     public List<ASMMethod> getMethods() {
         return Collections.unmodifiableList(methods);
     }
+
+    //Utility method to check if class is an interface
+    public boolean isInterface() {
+        return (classNode.access & org.objectweb.asm.Opcodes.ACC_INTERFACE) != 0;
+    }
+
+
+    public boolean isAbstract() {
+        return (classNode.access & org.objectweb.asm.Opcodes.ACC_ABSTRACT) != 0;
+    }
+
 
     // Keep access to raw ClassNode for advanced use cases
     public ClassNode getClassNode() {

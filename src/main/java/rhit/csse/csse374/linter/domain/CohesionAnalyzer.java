@@ -1,13 +1,21 @@
 package rhit.csse.csse374.linter.domain;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+
 import rhit.csse.csse374.linter.data.ASMClass;
 import rhit.csse.csse374.linter.data.ASMMethod;
 import rhit.csse.csse374.linter.data.Instruction;
-
-import java.util.*;
 
 public class CohesionAnalyzer extends Principle {
     
@@ -20,10 +28,15 @@ public class CohesionAnalyzer extends Principle {
     public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();
 
-        // CODE SMELL: Feature Envy — Reaching through ASMClass wrapper into ASM internals. Recommended refactoring: Add isInterface()/isAbstract() to ASMClass
-        if ((cls.getClassNode().access & org.objectweb.asm.Opcodes.ACC_INTERFACE) != 0 ||
-            (cls.getClassNode().access & org.objectweb.asm.Opcodes.ACC_ABSTRACT) != 0) {
-            return violations;
+        /**CODE REFACTORED: Ervin 3/29/2026 - Extract Method for Feature Envy
+        Moved interface and abstract class check to its own method and put
+        said method in ASMClass.java
+        
+        Skip interfaces and abstract classes as they are not expected to have
+        high cohesion
+        **/
+        if (cls.isInterface() || cls.isAbstract()) {
+            return violations; 
         }
 
         int lcom4Score = calculateLCOM4(cls);
