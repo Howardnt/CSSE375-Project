@@ -20,6 +20,7 @@ public class CohesionAnalyzer extends Principle {
     public List<Violation> checkClass(ASMClass cls) {
         List<Violation> violations = new ArrayList<>();
 
+        // CODE SMELL: Feature Envy — Reaching through ASMClass wrapper into ASM internals. Recommended refactoring: Add isInterface()/isAbstract() to ASMClass
         if ((cls.getClassNode().access & org.objectweb.asm.Opcodes.ACC_INTERFACE) != 0 ||
             (cls.getClassNode().access & org.objectweb.asm.Opcodes.ACC_ABSTRACT) != 0) {
             return violations;
@@ -37,6 +38,7 @@ public class CohesionAnalyzer extends Principle {
         return violations;
     }
 
+    // CODE SMELL: Long Method — calculateLCOM4() is 87 lines with three distinct responsibilities. Recommended refactoring: Extract Method (extractMethodFieldUsage, buildConnectivityGraph, countConnectedComponents)
     private int calculateLCOM4(ASMClass asmClass) {
         String ownerClass = asmClass.getClassName();
         Map<String, Set<String>> methodToFields = new HashMap<>();

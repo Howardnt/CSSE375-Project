@@ -14,6 +14,7 @@ import java.util.*;
  * - cohesion (field sharing across methods, LCOM-ish)
  * - dependency fan-out (distinct external packages referenced via method calls)
  */
+// CODE SMELL: God Class / Naming — This class handles field access analysis, dependency fan-out, disjoint ratio, and cohesion (violates SRP itself). Class name violates PascalCase. Recommended refactoring: Extract Class, Rename to SingleResponsibilityPrinciple
 public class singleResponsibilityPrinciple extends Principle {
 
     private static final int MIN_PUBLIC_METHODS = 10;

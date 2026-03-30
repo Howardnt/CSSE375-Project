@@ -90,6 +90,7 @@ public final class CheckCatalog {
     }
 
     private static List<CheckDescriptor> discoverAllChecks() {
+        // CODE SMELL: Magic String — Hardcoded package name for classpath scanning. Recommended refactoring: Extract Constant
         String basePackage = "rhit.csse.csse374.linter.domain";
         String basePath = basePackage.replace('.', '/');
 
@@ -193,6 +194,7 @@ public final class CheckCatalog {
         return out;
     }
 
+    // CODE SMELL: Complex Method — toDescriptor() is 46 lines with nested try-catch and reflection. Recommended refactoring: Extract Method (instantiateCheck, extractCategory, extractDescription)
     private static CheckDescriptor toDescriptor(String className, ClassLoader cl) {
         try {
             Class<?> clazz = Class.forName(className, false, cl);

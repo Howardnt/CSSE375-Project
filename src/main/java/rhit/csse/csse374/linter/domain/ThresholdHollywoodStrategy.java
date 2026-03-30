@@ -20,6 +20,7 @@ import java.util.Set;
  * provided threshold,
  * or if it instantiates its high-level dependency.
  */
+// CODE SMELL: Duplicate Code — Instantiation-checking logic is duplicated across StrictHollywoodStrategy, ThresholdHollywoodStrategy, and InstantiationOnlyStrategy. Recommended refactoring: Pull Up Method into HollywoodStrategy or HollywoodPrinciple
 public class ThresholdHollywoodStrategy implements HollywoodStrategy {
 
     private final int threshold;

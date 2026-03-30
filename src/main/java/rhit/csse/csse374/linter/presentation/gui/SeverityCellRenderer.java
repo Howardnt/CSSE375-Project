@@ -30,6 +30,7 @@ public final class SeverityCellRenderer extends DefaultTableCellRenderer {
             base = Color.BLACK;
         }
 
+        // CODE SMELL: Magic Strings — Severity levels "ERROR", "WARNING", "INFO" are raw strings duplicated across multiple files. Recommended refactoring: Replace with SeverityLevel enum
         Color color = switch (severity) {
             case "ERROR" -> new Color(176, 0, 32);
             case "WARNING", "WARN" -> new Color(156, 92, 0);

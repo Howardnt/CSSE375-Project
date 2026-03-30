@@ -19,6 +19,7 @@ import java.util.Set;
  * Flags a violation if a subclass makes ANY upward call or instantiates its
  * high-level dependency.
  */
+// CODE SMELL: Duplicate Code — Instantiation-checking logic is duplicated across StrictHollywoodStrategy, ThresholdHollywoodStrategy, and InstantiationOnlyStrategy. Recommended refactoring: Pull Up Method into HollywoodStrategy or HollywoodPrinciple
 public class StrictHollywoodStrategy implements HollywoodStrategy {
 
     private static final Set<String> EXCLUDED_METHODS = new HashSet<>(Arrays.asList(
