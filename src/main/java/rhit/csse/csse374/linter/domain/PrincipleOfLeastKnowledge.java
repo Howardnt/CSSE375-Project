@@ -25,6 +25,7 @@ public class PrincipleOfLeastKnowledge extends Principle {
         for (ASMMethod method : cls.getMethods()) {
             List<Instruction> instructions = method.getInstructions();
             
+            // CODE SMELL: Brittle Code — Sequential instruction index checking (i+1) assumes specific bytecode ordering. Recommended refactoring: Use instruction pattern matching
             for (int i = 0; i < instructions.size() - 1; i++) {
                 AbstractInsnNode insn1 = instructions.get(i).getInstruction();
                 

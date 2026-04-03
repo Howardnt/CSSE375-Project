@@ -81,6 +81,7 @@ public class PascalClassName extends Cursory {
      * @param name the simple class name to check
      * @return true if the name follows PascalCase, false otherwise
      */
+    // CODE SMELL: Duplicate Logic — isPascalCase() and describeViolation() overlap in character-level validation. Recommended refactoring: Extract Method (analyzeNameViolations)
     private boolean isPascalCase(String name) {
         if (name == null || name.isEmpty()) {
             return false;

@@ -22,6 +22,7 @@ import java.util.*;
 public class HollywoodPrinciple extends Principle {
 
     private final HollywoodStrategy strategy;
+    // CODE SMELL: Unbounded Cache — resolvedMethodCache grows without limit. Recommended refactoring: Use LinkedHashMap with size limit or WeakHashMap
     private final Map<String, Set<String>> resolvedMethodCache = new HashMap<>();
 
     /**
@@ -114,6 +115,7 @@ public class HollywoodPrinciple extends Principle {
                         }
                     }
                 }
+            // CODE SMELL: Swallowed Exception — Exception silently ignored during method resolution. Recommended refactoring: Add logging
             } catch (Exception e) {
                 // Silently ignore — if we can't load the type, skip resolution
             }

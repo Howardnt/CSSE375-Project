@@ -14,6 +14,7 @@ import java.util.Locale;
  *
  * Groups violations by check. Each group can be expanded/collapsed to show individual violations.
  */
+// CODE SMELL: God Class — Handles filtering, UI building, panel management, and color coding in one class. Recommended refactoring: Extract Class (CollapsibleCheckPanel, ViolationCard, ViolationFilter)
 public final class ResultsAccordionPanel extends JPanel {
 
     public record CheckGroup(String category, String checkName, List<Violation> violations) {

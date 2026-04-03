@@ -34,6 +34,7 @@ public class ASMMethod {
         this.methodName = methodNode.name;
         this.methodNode = methodNode;
 
+        // CODE SMELL: Duplicate Code — Two nearly identical analysis blocks for BasicInterpreter and SimpleVerifier. Recommended refactoring: Extract Method (performAnalysis)
         // --- Basic analysis ---
         Frame<BasicValue>[] analyzedBasicFrames = null;
         boolean basicSucceeded = false;

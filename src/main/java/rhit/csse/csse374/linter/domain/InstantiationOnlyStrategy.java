@@ -19,6 +19,7 @@ import java.util.Set;
  * own
  * high-level dependency (superclass/interface) using the 'new' keyword.
  */
+// CODE SMELL: Duplicate Code — Instantiation-checking logic is duplicated across StrictHollywoodStrategy, ThresholdHollywoodStrategy, and InstantiationOnlyStrategy. Recommended refactoring: Pull Up Method into HollywoodStrategy or HollywoodPrinciple
 public class InstantiationOnlyStrategy implements HollywoodStrategy {
 
     private static final Set<String> EXCLUDED_METHODS = new HashSet<>(Arrays.asList(

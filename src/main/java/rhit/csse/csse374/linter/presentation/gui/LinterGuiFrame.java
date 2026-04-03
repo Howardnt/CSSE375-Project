@@ -22,6 +22,7 @@ import java.util.List;
  *
  * This class focuses on layout and UI wiring. The actual run logic is added via a SwingWorker later.
  */
+// CODE SMELL: God Class — This class (454 lines) handles layout, file selection, check selection, validation, execution, and result display. Recommended refactoring: Extract Class (LinterService, TargetPathPanel, CheckSelectionPanel)
 public class LinterGuiFrame extends JFrame {
 
     private final JTextField targetPathField = new JTextField();
@@ -222,6 +223,7 @@ public class LinterGuiFrame extends JFrame {
         targetPathField.setText(new File(defaultPath).getAbsolutePath());
     }
 
+    // CODE SMELL: Long Method — onRun() is 98 lines with nested validation, check configuration, and worker creation. Recommended refactoring: Extract Method (validateInputs, instantiateSelectedChecks, categorizeChecks, launchWorker)
     private void onRun() {
         if (activeWorker != null) {
             return;
