@@ -20,7 +20,7 @@ import java.util.Set;
  * provided threshold,
  * or if it instantiates its high-level dependency.
  */
-public class ThresholdHollywoodStrategy implements HollywoodStrategy {
+public class ThresholdHollywoodStrategy extends AbstractHollywoodMethod {
 
     private final int threshold;
     private static final Set<String> EXCLUDED_METHODS = new HashSet<>(Arrays.asList(
@@ -60,17 +60,9 @@ public class ThresholdHollywoodStrategy implements HollywoodStrategy {
                 }
 
                 // Count Upward Calls
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode methodInsn = (MethodInsnNode) insn;
-
-                    boolean isDirectUpwardCall = highLevelTypes.contains(methodInsn.owner);
-                    boolean isSelfCallToHighLevelMethod = methodInsn.owner.equals(currentClassName)
-                            && highLevelMethodSignatures.contains(methodInsn.name + methodInsn.desc);
-
-                    if ((isDirectUpwardCall || isSelfCallToHighLevelMethod)
-                            && !EXCLUDED_METHODS.contains(methodInsn.name)) {
-                        String key = methodInsn.name + methodInsn.desc;
-                        if (calledMethods.add(key)) {
+                if (insn instanceof MethodInsnNode methodInsn) {
+                    if (isUpwardCall(methodInsn, currentClassName, highLevelTypes, highLevelMethodSignatures)) {
+                        if (calledMethods.add(methodInsn.name + methodInsn.desc)) {
                             upwardCallCount++;
                         }
                     }

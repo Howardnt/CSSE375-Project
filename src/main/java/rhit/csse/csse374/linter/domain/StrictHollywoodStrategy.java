@@ -19,7 +19,7 @@ import java.util.Set;
  * Flags a violation if a subclass makes ANY upward call or instantiates its
  * high-level dependency.
  */
-public class StrictHollywoodStrategy implements HollywoodStrategy {
+public class StrictHollywoodStrategy extends AbstractHollywoodMethod {
 
     private static final Set<String> EXCLUDED_METHODS = new HashSet<>(Arrays.asList(
             "<init>", "<clinit>", "equals", "hashCode", "toString"));
@@ -51,20 +51,12 @@ public class StrictHollywoodStrategy implements HollywoodStrategy {
                 }
 
                 // Check Upward Calls
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode methodInsn = (MethodInsnNode) insn;
-
-                    boolean isDirectUpwardCall = highLevelTypes.contains(methodInsn.owner);
-                    boolean isSelfCallToHighLevelMethod = methodInsn.owner.equals(currentClassName)
-                            && highLevelMethodSignatures.contains(methodInsn.name + methodInsn.desc);
-
-                    if ((isDirectUpwardCall || isSelfCallToHighLevelMethod)
-                            && !EXCLUDED_METHODS.contains(methodInsn.name)) {
+                if (insn instanceof MethodInsnNode methodInsn) {
+                    if (isUpwardCall(methodInsn, currentClassName, highLevelTypes, highLevelMethodSignatures)) {
                         violations.add(new Violation(
-                                "Strict Hollywood Violation: Zero tolerance for upward calls. Method calls '"
-                                        + methodInsn.name + "' from a high-level component.",
-                                cls.getClassName() + "." + method.getMethodName(),
-                                "ERROR"));
+                            "Strict Hollywood Violation: Upward call to " + methodInsn.name,
+                            cls.getClassName() + "." + method.getMethodName(),
+                            "ERROR"));
                     }
                 }
             }

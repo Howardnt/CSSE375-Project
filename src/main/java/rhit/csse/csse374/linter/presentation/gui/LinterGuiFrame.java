@@ -32,6 +32,7 @@ public class LinterGuiFrame extends JFrame {
     private final JProgressBar progressBar = new JProgressBar();
 
     private JSplitPane mainSplitPane;
+    private LinterResult lastResult;
 
     // Check selection panels
     private final CheckTabPanel cursoryTab = new CheckTabPanel(CheckCatalog.cursoryChecks());
@@ -174,6 +175,9 @@ public class LinterGuiFrame extends JFrame {
         panel.add(progressBar, BorderLayout.CENTER);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JButton exportButton = new JButton("Export JSON");
+        exportButton.addActionListener(e -> onExportJson()); 
+        right.add(exportButton);
         right.add(runButton);
         panel.add(right, BorderLayout.EAST);
 
@@ -220,61 +224,23 @@ public class LinterGuiFrame extends JFrame {
 
     private void onRun() {
         if (activeWorker != null) {
-            return; // already running
+            return;
         }
 
         String path = targetPathField.getText().trim();
-        if (path.isEmpty()) {
-            showWarning("Missing target", "Please choose a folder (or .class file) containing compiled classes.");
+        if (!validatePath(path)) {
             return;
         }
 
         File target = new File(path);
-        if (!target.exists()) {
-            showWarning("Target not found", "Path does not exist:\n" + target.getAbsolutePath());
-            return;
-        }
-        if (target.isFile() && !target.getName().endsWith(".class")) {
-            showWarning("Invalid target", "Please select a directory of .class files or a single .class file.");
-            return;
-        }
-        if (target.isDirectory() && !DefaultTargetLocator.containsClassFiles(target)) {
-            showWarning("No compiled classes found", "Selected directory contains no .class files:\n" + target.getAbsolutePath());
-            return;
-        }
-
-        // Gather selected checks and instantiate them in a stable order.
         List<CheckDescriptor> selected = getSelectedCheckDescriptors();
         if (selected.isEmpty()) {
             showWarning("No checks selected", "Select at least one check, then click Run.");
             return;
         }
 
-        List<Cursory> cursories = new ArrayList<>();
-        List<Principle> principles = new ArrayList<>();
-        List<Pattern> patterns = new ArrayList<>();
-
-        List<String> cursoryNames = new ArrayList<>();
-        List<String> principleNames = new ArrayList<>();
-        List<String> patternNames = new ArrayList<>();
-
-        for (CheckDescriptor d : selected) {
-            LintCheck check = d.create();
-            switch (d.category()) {
-                case CURSORY -> {
-                    cursories.add((Cursory) check);
-                    cursoryNames.add(check.name());
-                }
-                case PRINCIPLE -> {
-                    principles.add((Principle) check);
-                    principleNames.add(check.name());
-                }
-                case PATTERN -> {
-                    patterns.add((Pattern) check);
-                    patternNames.add(check.name());
-                }
-            }
-        }
+        // Extracted logic into a dedicated helper
+        PreparedChecks prepared = prepareChecks(selected);
 
         setRunning(true);
         summaryArea.setText("Running analysis...\n\nTarget: " + target.getAbsolutePath());
@@ -282,39 +248,64 @@ public class LinterGuiFrame extends JFrame {
 
         RunLinterWorker worker = new RunLinterWorker(
                 target.getAbsolutePath(),
-                cursories,
-                principles,
-                patterns,
-                cursoryNames,
-                principleNames,
-                patternNames
+                prepared.cursories,
+                prepared.principles,
+                prepared.patterns,
+                prepared.cursoryNames,
+                prepared.principleNames,
+                prepared.patternNames
         );
         activeWorker = worker;
 
         worker.addPropertyChangeListener(evt -> {
-            if (!"state".equals(evt.getPropertyName())) {
-                return;
-            }
-            if (evt.getNewValue() != SwingWorker.StateValue.DONE) {
-                return;
-            }
-
-            try {
-                RunLinterWorker.RunResult runResult = worker.get();
-                onRunCompleted(runResult);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                showWarning("Run interrupted", "The linter run was interrupted.");
-            } catch (ExecutionException ex) {
-                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                showWarning("Run failed", "The linter failed:\n" + cause.getMessage());
-            } finally {
-                activeWorker = null;
-                setRunning(false);
+            if ("state".equals(evt.getPropertyName()) && evt.getNewValue() == SwingWorker.StateValue.DONE) {
+                try {
+                    onRunCompleted(worker.get());
+                } catch (Exception ex) {
+                    showWarning("Run failed", "The linter failed:\n" + ex.getMessage());
+                } finally {
+                    activeWorker = null;
+                    setRunning(false);
+                }
             }
         });
-
         worker.execute();
+    }
+
+    // Helper for validation logic (further extraction)
+    private boolean validatePath(String path) {
+        if (path.isEmpty()) {
+            showWarning("Missing target", "Please choose a folder.");
+            return false;
+        }
+        File target = new File(path);
+        return target.exists();
+    }
+
+    // New record to hold the grouped check data
+    private record PreparedChecks(
+        List<Cursory> cursories, List<Principle> principles, List<Pattern> patterns,
+        List<String> cursoryNames, List<String> principleNames, List<String> patternNames
+    ) {}
+
+    // The extracted method for logic cleanup
+    private PreparedChecks prepareChecks(List<CheckDescriptor> selected) {
+        List<Cursory> cursories = new ArrayList<>();
+        List<Principle> principles = new ArrayList<>();
+        List<Pattern> patterns = new ArrayList<>();
+        List<String> cNames = new ArrayList<>();
+        List<String> prNames = new ArrayList<>();
+        List<String> paNames = new ArrayList<>();
+
+        for (CheckDescriptor d : selected) {
+            LintCheck check = d.create();
+            switch (d.category()) {
+                case CURSORY -> { cursories.add((Cursory) check); cNames.add(check.name()); }
+                case PRINCIPLE -> { principles.add((Principle) check); prNames.add(check.name()); }
+                case PATTERN -> { patterns.add((Pattern) check); paNames.add(check.name()); }
+            }
+        }
+        return new PreparedChecks(cursories, principles, patterns, cNames, prNames, paNames);
     }
 
     /**
@@ -351,6 +342,7 @@ public class LinterGuiFrame extends JFrame {
     }
 
     private void onRunCompleted(RunLinterWorker.RunResult runResult) {
+        this.lastResult = runResult.result();
         LinterResult result = runResult.result();
 
         summaryArea.setText(
@@ -365,6 +357,43 @@ public class LinterGuiFrame extends JFrame {
         rawReportArea.setCaretPosition(0);
 
         populateAccordionResults(result, runResult);
+    }
+
+    private void onExportJson() {
+        if (lastResult == null) {
+            showWarning("No data", "Please run a scan before exporting.");
+            return;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File("linter-results.json"));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        try (java.io.PrintWriter out = new java.io.PrintWriter(chooser.getSelectedFile())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\n  \"project\": \"").append(lastResult.getProjectPath()).append("\",\n");
+            sb.append("  \"totalViolations\": ").append(lastResult.getTotalViolationCount()).append(",\n");
+            sb.append("  \"violations\": [\n");
+
+            List<Violation> all = new ArrayList<>();
+            lastResult.getCursoryResults().forEach(r -> all.addAll(r.getViolations()));
+            lastResult.getPrincipleResults().forEach(r -> all.addAll(r.getViolations()));
+            lastResult.getPatternResults().forEach(r -> all.addAll(r.getViolations()));
+
+            for (int i = 0; i < all.size(); i++) {
+                Violation v = all.get(i);
+                sb.append("    {\n");
+                sb.append("      \"location\": \"").append(v.getLocation()).append("\",\n");
+                sb.append("      \"severity\": \"").append(v.getSeverity()).append("\",\n");
+                sb.append("      \"message\": \"").append(v.getLocation().replace("\"", "\\\"")).append("\"\n");
+                sb.append("    }").append(i < all.size() - 1 ? "," : "").append("\n");
+            }
+            sb.append("  ]\n}");
+            out.print(sb.toString());
+            JOptionPane.showMessageDialog(this, "Export complete!");
+        } catch (Exception ex) {
+            showWarning("Export error", "Failed to save JSON: " + ex.getMessage());
+        }
     }
 
     private void populateAccordionResults(LinterResult result, RunLinterWorker.RunResult runResult) {

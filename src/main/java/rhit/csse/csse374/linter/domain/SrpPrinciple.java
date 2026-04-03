@@ -14,17 +14,18 @@ import java.util.*;
  * - cohesion (field sharing across methods, LCOM-ish)
  * - dependency fan-out (distinct external packages referenced via method calls)
  */
-public class singleResponsibilityPrinciple extends Principle {
+public class SrpPrinciple extends Principle {
 
     private static final int MIN_PUBLIC_METHODS = 10;
     private static final int MIN_TOTAL_METHODS = 20;
     private static final int MIN_FIELDS = 8;
     private static final double MIN_DISJOINT_RATIO = 0.5;
     private static final int MIN_DEPENDENCY_PACKAGES = 3;
+    private final SrpMetricsCalculator calculator = new SrpMetricsCalculator();
 
     @Override
     public String name() {
-        return "SingleResponsibilityPrinciple";
+        return "SrpPrinciple";
     }
 
     @Override
@@ -68,8 +69,8 @@ public class singleResponsibilityPrinciple extends Principle {
         }
 
         Map<MethodNode, Set<String>> fieldsByMethod = computeFieldsAccessedPerMethod(classNode, interestingMethods);
-        double disjointRatio = computeDisjointRatio(fieldsByMethod);
-        int dependencyPackages = computeDependencyFanOut(classNode, interestingMethods);
+        double disjointRatio = calculator.computeDisjointRatio(fieldsByMethod);
+        int dependencyPackages = calculator.computeDependencyFanOut(classNode, interestingMethods);
 
         boolean lowCohesion = disjointRatio >= MIN_DISJOINT_RATIO;
         boolean highFanOut = dependencyPackages >= MIN_DEPENDENCY_PACKAGES;
@@ -105,60 +106,6 @@ public class singleResponsibilityPrinciple extends Principle {
             result.put(method, accessed);
         }
         return result;
-    }
-
-    private double computeDisjointRatio(Map<MethodNode, Set<String>> fieldsByMethod) {
-        List<MethodNode> methods = new ArrayList<>(fieldsByMethod.keySet());
-        int n = methods.size();
-        if (n < 2) {
-            return 0.0;
-        }
-
-        int disjointPairs = 0;
-        int overlappingPairs = 0;
-
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                Set<String> a = fieldsByMethod.get(methods.get(i));
-                Set<String> b = fieldsByMethod.get(methods.get(j));
-                if (a.isEmpty() && b.isEmpty()) {
-                    continue;
-                }
-                Set<String> intersection = new HashSet<>(a);
-                intersection.retainAll(b);
-                if (intersection.isEmpty()) {
-                    disjointPairs++;
-                } else {
-                    overlappingPairs++;
-                }
-            }
-        }
-
-        int totalPairs = disjointPairs + overlappingPairs;
-        if (totalPairs == 0) {
-            return 0.0;
-        }
-        return (double) disjointPairs / (double) totalPairs;
-    }
-
-    private int computeDependencyFanOut(ClassNode classNode, List<MethodNode> methods) {
-        Set<String> packages = new HashSet<>();
-        for (MethodNode method : methods) {
-            InsnList insns = method.instructions;
-            for (int i = 0; i < insns.size(); i++) {
-                AbstractInsnNode insn = insns.get(i);
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode call = (MethodInsnNode) insn;
-                    if (classNode.name.equals(call.owner)) {
-                        continue;
-                    }
-                    String owner = call.owner;
-                    int lastSlash = owner.lastIndexOf('/');
-                    packages.add(lastSlash > 0 ? owner.substring(0, lastSlash) : owner);
-                }
-            }
-        }
-        return packages.size();
     }
 }
 

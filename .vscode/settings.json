@@ -1,10 +1,10 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17.0.1",
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21",
     "java.configuration.runtimes": [
         {
             "name": "JavaSE-17",
-            "path": "C:\\Program Files\\Java\\jdk-17.0.1",
+            "path": "C:\\Program Files\\Java\\jdk-21",
             "default": true
         }
     ]
