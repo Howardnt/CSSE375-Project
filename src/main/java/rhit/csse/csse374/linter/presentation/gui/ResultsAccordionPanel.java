@@ -1,5 +1,6 @@
 package rhit.csse.csse374.linter.presentation.gui;
 
+import rhit.csse.csse374.linter.domain.SeverityLevel;
 import rhit.csse.csse374.linter.domain.Violation;
 
 import javax.swing.*;
@@ -284,12 +285,7 @@ public final class ResultsAccordionPanel extends JPanel {
         }
 
         private Color severityColor(String severity) {
-            return switch (severity) {
-                case "ERROR" -> new Color(176, 0, 32);
-                case "WARNING", "WARN" -> new Color(156, 92, 0);
-                case "INFO" -> new Color(0, 92, 156);
-                default -> UIManager.getColor("Label.foreground");
-            };
+            return SeverityLevel.fromString(severity).getColor();
         }
     }
 

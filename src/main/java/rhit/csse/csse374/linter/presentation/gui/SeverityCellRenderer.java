@@ -1,5 +1,7 @@
 package rhit.csse.csse374.linter.presentation.gui;
 
+import rhit.csse.csse374.linter.domain.SeverityLevel;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -24,19 +26,9 @@ public final class SeverityCellRenderer extends DefaultTableCellRenderer {
             return c; // keep selection colors
         }
 
-        String severity = (value == null) ? "" : value.toString().trim().toUpperCase();
-        Color base = UIManager.getColor("Table.foreground");
-        if (base == null) {
-            base = Color.BLACK;
-        }
-
-        // CODE SMELL: Magic Strings — Severity levels "ERROR", "WARNING", "INFO" are raw strings duplicated across multiple files. Recommended refactoring: Replace with SeverityLevel enum
-        Color color = switch (severity) {
-            case "ERROR" -> new Color(176, 0, 32);
-            case "WARNING", "WARN" -> new Color(156, 92, 0);
-            case "INFO" -> new Color(0, 92, 156);
-            default -> base;
-        };
+        String severityStr = (value == null) ? "" : value.toString().trim();
+        SeverityLevel level = SeverityLevel.fromString(severityStr);
+        Color color = level.getColor();
 
         c.setForeground(color);
         return c;

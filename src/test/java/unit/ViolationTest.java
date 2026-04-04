@@ -3,6 +3,7 @@ package unit;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import rhit.csse.csse374.linter.domain.SeverityLevel;
 import rhit.csse.csse374.linter.domain.Violation;
 
 public class ViolationTest {
@@ -43,5 +44,24 @@ public class ViolationTest {
     void toStringOmitsAtWhenLocationIsEmpty() {
         Violation v = new Violation("some message", "", "INFO");
         assertFalse(v.toString().contains("at"));
+    }
+
+    @Test
+    void severityLevelConstructorStoresSeverityLevel() {
+        Violation v = new Violation("msg", "loc", SeverityLevel.ERROR);
+        assertEquals(SeverityLevel.ERROR, v.getSeverityLevel());
+        assertEquals("ERROR", v.getSeverity());
+    }
+
+    @Test
+    void stringConstructorConvertsToSeverityLevel() {
+        Violation v = new Violation("msg", "loc", "INFO");
+        assertEquals(SeverityLevel.INFO, v.getSeverityLevel());
+    }
+
+    @Test
+    void defaultSeverityLevelIsWarning() {
+        Violation v = new Violation("msg", "loc");
+        assertEquals(SeverityLevel.WARNING, v.getSeverityLevel());
     }
 }
