@@ -29,39 +29,47 @@ public class ASMMethod {
     private final List<Instruction> simpleInstructions;
     private final boolean simpleAnalysisSucceeded;
 
+    /**CODE REFACTORED: Ervin 4/3/2026 - Extract Method for Duplicate Code
+    Extracted performAnalysis() to eliminate the two nearly identical
+    analysis blocks for BasicInterpreter and SimpleVerifier.
+    **/
     public ASMMethod(String className, MethodNode methodNode) {
         this.className = className;
         this.methodName = methodNode.name;
         this.methodNode = methodNode;
 
-        // CODE SMELL: Duplicate Code — Two nearly identical analysis blocks for BasicInterpreter and SimpleVerifier. Recommended refactoring: Extract Method (performAnalysis)
-        // --- Basic analysis ---
-        Frame<BasicValue>[] analyzedBasicFrames = null;
-        boolean basicSucceeded = false;
-        try {
-            Analyzer<BasicValue> analyzer = new Analyzer<>(new BasicInterpreter());
-            analyzedBasicFrames = analyzer.analyze(className, methodNode);
-            basicSucceeded = true;
-        } catch (AnalyzerException e) {
-            // silently fail
-        }
-        this.basicFrames = analyzedBasicFrames;
-        this.basicAnalysisSucceeded = basicSucceeded;
-        this.basicInstructions = buildInstructions(methodNode, analyzedBasicFrames);
+        // Basic analysis (always succeeds, no type info)
+        AnalysisResult basicResult = performAnalysis(new BasicInterpreter(), className, methodNode);
+        this.basicFrames = basicResult.frames;
+        this.basicAnalysisSucceeded = basicResult.succeeded;
+        this.basicInstructions = buildInstructions(methodNode, basicResult.frames);
 
-        // --- Simple analysis ---
-        Frame<BasicValue>[] analyzedSimpleFrames = null;
-        boolean simpleSucceeded = false;
-        try {
-            Analyzer<BasicValue> analyzer = new Analyzer<>(new SimpleVerifier());
-            analyzedSimpleFrames = analyzer.analyze(className, methodNode);
-            simpleSucceeded = true;
-        } catch (AnalyzerException e) {
-            // silently fail - external classes may not be resolvable
+        // Simple analysis (may fail, but provides type info)
+        AnalysisResult simpleResult = performAnalysis(new SimpleVerifier(), className, methodNode);
+        this.simpleFrames = simpleResult.frames;
+        this.simpleAnalysisSucceeded = simpleResult.succeeded;
+        this.simpleInstructions = buildInstructions(methodNode, simpleResult.frames);
+    }
+
+    private static class AnalysisResult {
+        final Frame<BasicValue>[] frames;
+        final boolean succeeded;
+
+        AnalysisResult(Frame<BasicValue>[] frames, boolean succeeded) {
+            this.frames = frames;
+            this.succeeded = succeeded;
         }
-        this.simpleFrames = analyzedSimpleFrames;
-        this.simpleAnalysisSucceeded = simpleSucceeded;
-        this.simpleInstructions = buildInstructions(methodNode, analyzedSimpleFrames);
+    }
+
+    private AnalysisResult performAnalysis(Interpreter<BasicValue> interpreter,
+            String className, MethodNode methodNode) {
+        try {
+            Analyzer<BasicValue> analyzer = new Analyzer<>(interpreter);
+            Frame<BasicValue>[] frames = analyzer.analyze(className, methodNode);
+            return new AnalysisResult(frames, true);
+        } catch (AnalyzerException e) {
+            return new AnalysisResult(null, false);
+        }
     }
 
     private List<Instruction> buildInstructions(MethodNode methodNode, Frame<BasicValue>[] frames) {
