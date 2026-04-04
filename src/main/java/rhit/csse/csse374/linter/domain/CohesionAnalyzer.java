@@ -51,12 +51,28 @@ public class CohesionAnalyzer extends Principle {
         return violations;
     }
 
-    // CODE SMELL: Long Method — calculateLCOM4() is 87 lines with three distinct responsibilities. Recommended refactoring: Extract Method (extractMethodFieldUsage, buildConnectivityGraph, countConnectedComponents)
+    /**CODE REFACTORED: Ervin 4/3/2026 - Extract Method for Long Method
+    Split calculateLCOM4() into three extracted methods following Fowler's
+    Extract Function pattern: extractMethodFieldUsage, buildConnectivityGraph,
+    countConnectedComponents.
+    **/
     private int calculateLCOM4(ASMClass asmClass) {
-        String ownerClass = asmClass.getClassName();
+        List<String> validMethods = new ArrayList<>();
         Map<String, Set<String>> methodToFields = new HashMap<>();
         Map<String, Set<String>> methodToMethods = new HashMap<>();
-        List<String> validMethods = new ArrayList<>();
+
+        extractMethodFieldUsage(asmClass, validMethods, methodToFields, methodToMethods);
+
+        if (validMethods.isEmpty()) return 1;
+
+        Map<String, Set<String>> graph = buildConnectivityGraph(validMethods, methodToFields, methodToMethods);
+
+        return countConnectedComponents(validMethods, graph);
+    }
+
+    private void extractMethodFieldUsage(ASMClass asmClass, List<String> validMethods,
+            Map<String, Set<String>> methodToFields, Map<String, Set<String>> methodToMethods) {
+        String ownerClass = asmClass.getClassName();
 
         for (ASMMethod method : asmClass.getMethods()) {
             String methodName = method.getMethodName();
@@ -87,9 +103,10 @@ public class CohesionAnalyzer extends Principle {
                 }
             }
         }
+    }
 
-        if (validMethods.isEmpty()) return 1;
-
+    private Map<String, Set<String>> buildConnectivityGraph(List<String> validMethods,
+            Map<String, Set<String>> methodToFields, Map<String, Set<String>> methodToMethods) {
         Map<String, Set<String>> graph = new HashMap<>();
         for (String m : validMethods) graph.put(m, new HashSet<>());
 
@@ -115,6 +132,10 @@ public class CohesionAnalyzer extends Principle {
             }
         }
 
+        return graph;
+    }
+
+    private int countConnectedComponents(List<String> validMethods, Map<String, Set<String>> graph) {
         int components = 0;
         Set<String> visited = new HashSet<>();
 
