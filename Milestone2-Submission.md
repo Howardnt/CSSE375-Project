@@ -402,16 +402,39 @@ Example format:
 
 ## Test Summary
 
-| Test File | # Tests | What it covers |
-|-----------|---------|----------------|
-| `ViolationTest.java` | 8 | Violation constructors, severity, toString |
-| `SeverityLevelTest.java` | 9 | Enum values, colors, fromString parsing |
-| `ASMMethodTest.java` | 6 | Analysis, instructions, naming |
-| `ASMClassTest.java` | 6 | isInterface, isAbstract, getMethods |
-| `CohesionAnalyzerTest.java` | 5 | LCOM4 scoring on fixture classes |
-| `EqualsCheckerTest.java` | 4 | Equals/hashCode check |
-| `PascalClassNameTest.java` | 3 | Naming convention check |
-| `MethodTooLongTest.java` | 3 | Long method detection |
-| `TemplatePatternTest.java` | 2 | Template pattern detection |
-| `DecoratorPatternTest.java` | 2 | Decorator pattern detection |
-| **Total** | **48** | |
+**Total: 60 tests, 0 failures, 0 errors**
+
+### Q1 — Unit Tests (Automated, Technology-Facing)
+
+| Test File | # | Test Methods |
+|-----------|:-:|---|
+| `unit/ViolationTest.java` | 8 | `threeArgConstructorStoresAllFields`, `twoArgConstructorDefaultsSeverityToWarning`, `oneArgConstructorDefaultsSeverityAndLocation`, `toStringIncludesLocationWhenPresent`, `toStringOmitsAtWhenLocationIsEmpty`, `severityLevelConstructorStoresSeverityLevel`, `stringConstructorConvertsToSeverityLevel`, `defaultSeverityLevelIsWarning` |
+| `unit/SeverityLevelTest.java` | 9 | `errorHasNonNullColor`, `warningHasNonNullColor`, `infoHasNonNullColor`, `fromStringParsesError`, `fromStringParsesWarning`, `fromStringParsesWarnAlias`, `fromStringParsesInfo`, `fromStringDefaultsToWarningForNull`, `fromStringDefaultsToWarningForUnknown` |
+| `unit/ASMMethodTest.java` | 6 | `basicAnalysisSucceedsOnSimpleMethod`, `getInstructionsReturnsNonNullList`, `getInstructionsWithTypeInfoReturnsNonNullList`, `methodNameIsCorrect`, `fullMethodNameCombinesClassAndMethod`, `classWithMethodsProducesASMMethodsViaASMClass` |
+| `unit/ASMClassTest.java` | 6 | `regularClassIsNotInterface`, `regularClassIsNotAbstract`, `interfaceFlagIsDetected`, `abstractFlagIsDetected`, `getClassNameReturnsInternalName`, `getMethodsIsEmptyForClassWithNoMethods` |
+
+### Q2 — Functional / Check-Level Tests (Automated, Business-Facing)
+
+| Test File | # | Test Methods |
+|-----------|:-:|---|
+| `checks/CohesionAnalyzerTest.java` | 5 | `checkRunsWithoutAnalysisErrors`, `godClassIsDetected`, `violationMentionsCohesion`, `interfaceIsNotFlagged`, `abstractClassIsNotFlagged` |
+| `checks/EqualsCheckerTest.java` | 4 | `checkRunsWithoutAnalysisErrors`, `badComparisonsAreDetected`, `atLeastFiveViolationsFound`, `violationMessagesMentionEquals` |
+| `checks/PascalClassNameTest.java` | 3 | `checkRunsWithoutAnalysisErrors`, `badClassNameIsDetected`, `violationReferencesTheBadClass` |
+| `checks/MethodTooLongTest.java` | 3 | `checkRunsWithoutAnalysisErrors`, `tooManyParamsIsDetected`, `atLeastTwoViolationsFound` |
+| `checks/TemplatePatternTest.java` | 2 | `checkRunsWithoutAnalysisErrors`, `templateMethodPatternIsDetected` |
+| `checks/DecoratorPatternTest.java` | 2 | `checkRunsWithoutAnalysisErrors`, `decoratorIsDetected` |
+
+### Q2 — System / End-to-End Tests (Automated, Business-Facing)
+
+| Test File | # | Test Methods |
+|-----------|:-:|---|
+| `system/LinterEndToEndTest.java` | 8 | `linterProducesNonNullResult`, `linterDetectsAtLeastOneViolation`, `linterReportsCorrectTotalClasses`, `cursoryResultsArePresent`, `principleResultsArePresent`, `patternResultsArePresent`, `allViolationsHaveMessages`, `linterOutputTextFormatsWithoutCrashing` |
+| `system/SeveritySystemTest.java` | 4 | `cohesionViolationsHaveDefaultWarningSeverity`, `equalsCheckerViolationsHaveDefaultWarningSeverity`, `allViolationsHaveNonNullSeverity`, `severityStringMatchesEnumName` |
+
+### Q3 — Exploratory / Usability Testing (Manual, Business-Facing)
+
+See "Q3: Exploratory Testing" section above.
+
+### Q4 — Performance & Security Testing (Tools, Technology-Facing)
+
+See "Q4: Test Plans" section above.
