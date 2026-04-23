@@ -194,51 +194,68 @@ public final class CheckCatalog {
         return out;
     }
 
-    // CODE SMELL: Complex Method — toDescriptor() is 46 lines with nested try-catch and reflection. Recommended refactoring: Extract Method (instantiateCheck, extractCategory, extractDescription)
+    //Refactoring 8: toDescriptor() was 46 lines of nested reflection. Extracted into
+    //loadConcreteCheckClass, isRejectedBaseClass, createSupplier, and instantiateCheck.
     private static CheckDescriptor toDescriptor(String className, ClassLoader cl) {
+        Class<? extends LintCheck> checkClass = loadConcreteCheckClass(className, cl);
+        if (checkClass == null) {
+            return null;
+        }
+        Category category = categorize(checkClass);
+        if (category == null) {
+            return null;
+        }
+        Supplier<LintCheck> supplier = createSupplier(checkClass);
+        String displayName = computeDisplayName(supplier, checkClass);
+        return new CheckDescriptor(checkClass.getName(), displayName, category, true, supplier);
+    }
+
+    private static Class<? extends LintCheck> loadConcreteCheckClass(String className, ClassLoader cl) {
         try {
             Class<?> clazz = Class.forName(className, false, cl);
-            if (!LintCheck.class.isAssignableFrom(clazz)) {
+            if (!isConcreteLintCheck(clazz) || isRejectedBaseClass(clazz)) {
                 return null;
             }
-            if (clazz.isInterface() || clazz.isEnum() || Modifier.isAbstract(clazz.getModifiers())) {
-                return null;
-            }
-            if (clazz.getName().equals(Cursory.class.getName())
-                    || clazz.getName().equals(Principle.class.getName())
-                    || clazz.getName().equals(Pattern.class.getName())
-                    || clazz.getName().equals(HollywoodPrinciple.class.getName())) {
-                return null;
-            }
-
-            Category category = categorize(clazz);
-            if (category == null) {
-                return null;
-            }
-
             @SuppressWarnings("unchecked")
             Class<? extends LintCheck> checkClass = (Class<? extends LintCheck>) clazz;
-
-            Supplier<LintCheck> supplier = () -> {
-                try {
-                    var ctor = checkClass.getDeclaredConstructor();
-                    ctor.setAccessible(true);
-                    return ctor.newInstance();
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to instantiate " + checkClass.getName(), e);
-                }
-            };
-
-            String displayName = computeDisplayName(supplier, checkClass);
-            String id = checkClass.getName();
-            boolean defaultSelected = true;
-
-            return new CheckDescriptor(id, displayName, category, defaultSelected, supplier);
+            return checkClass;
         } catch (ClassNotFoundException e) {
             return null;
         } catch (LinkageError e) {
             System.err.println("Skipping check due to linkage error: " + className + " (" + e.getMessage() + ")");
             return null;
+        }
+    }
+
+    private static boolean isConcreteLintCheck(Class<?> clazz) {
+        if (!LintCheck.class.isAssignableFrom(clazz)) {
+            return false;
+        }
+        if (clazz.isInterface() || clazz.isEnum() || Modifier.isAbstract(clazz.getModifiers())) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean isRejectedBaseClass(Class<?> clazz) {
+        String name = clazz.getName();
+        return name.equals(Cursory.class.getName())
+                || name.equals(Principle.class.getName())
+                || name.equals(Pattern.class.getName())
+                || name.equals(HollywoodPrinciple.class.getName());
+    }
+
+    private static Supplier<LintCheck> createSupplier(Class<? extends LintCheck> checkClass) {
+        return () -> instantiateCheck(checkClass);
+    }
+
+    private static LintCheck instantiateCheck(Class<? extends LintCheck> checkClass) {
+        try {
+            var ctor = checkClass.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            return ctor.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to instantiate " + checkClass.getName(), e);
         }
     }
 
