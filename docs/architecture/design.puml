@@ -26,6 +26,7 @@ package "Presentation" as presentation {
       class CheckCatalog {
         {static} -cachedAll: List<CheckDescriptor>
         {static} +allChecks(): List<CheckDescriptor>
+        -toDescriptor(...): CheckDescriptor
       }
       enum CheckCatalogCategory{
         CURSORY
@@ -42,14 +43,66 @@ package "Presentation" as presentation {
         {static} +findDefaultOutputDir(): String
       }
       class ResultsAccordionPanel {
+        -severityFilter: JComboBox<String>
+        -searchField: JTextField
+        -showZeroChecks: JCheckBox
         +setGroups(groups: List<CheckGroup>): void
+        -rebuild(): void
+      }
+      class ViolationFilter {
+        +filterViolations(violations: List<Violation>, severity: String, query: String): List<Violation>
+      }
+      class CollapsibleCheckPanel {
+        -headerButton: JToggleButton
+        -body: JPanel
+        +CollapsibleCheckPanel(category: String, checkName: String, allViolations: List<Violation>, visibleViolations: List<Violation>)
+        -toggle(): void
+        -populateBody(violations: List<Violation>): void
+      }
+      class SeverityCellRenderer {
+        +getTableCellRendererComponent(...): Component
+      }
+      class ViolationTableModel {
+        -rows: List<ViolationRow>
+        +setRows(newRows: List<ViolationRow>): void
+        +getRowAt(rowIndex: int): ViolationRow
+      }
+      record ViolationRow {
+        +checkName: String
+        +severity: String
+        +location: String
+        +message: String
       }
       class "RunLinterWorker.RunResult" as RunResult {
         +result: LinterResult
       }
       class "ResultsAccordionPanel.CheckGroup" as CheckGroup {
+        +category: String
         +checkName: String
         +violations: List<Violation>
+      }
+
+      class LinterCLI {
+        +main(args: String[]): void
+        -parseArgs(args: String[]): CLIOptions
+        -printResults(result: LinterResult): void
+      }
+
+      class LinterService {
+        +runAnalysis(projectPath: String, checks: List<LintCheck>): LinterResult
+      }
+
+      interface ReportRenderer {
+        +render(result: LinterResult): String
+      }
+      class JsonRenderer implements ReportRenderer {
+        +render(result: LinterResult): String
+      }
+      class TextRenderer implements ReportRenderer {
+        +render(result: LinterResult): String
+      }
+      class HtmlRenderer implements ReportRenderer {
+        +render(result: LinterResult): String
       }
 }
 
@@ -70,7 +123,11 @@ class ConvertToASM{
 +loadClassesFromPath(path: String): List<ClassNode>
 +findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
 +loadClassFile(classFile: File): ClassNode
+}
 
+class ConfigLoader {
+    +loadConfig(path: String): Map<String, Boolean>
+    +applyConfig(config: Map<String, Boolean>, catalog: CheckCatalog): List<LintCheck>
 }
 
 abstract class Cursory implements LintCheck{
@@ -83,13 +140,31 @@ class EqualsChecker extends Cursory{
 -checkInstruction(instruction: Instruction, method: ASMMethod): Violation
 -isProblematicType(type: Type): boolean
 +name(): String
-
 }
+
 class CamelCaseChecker extends Cursory{
     +name(): String
     +checkClass(cls: ASMClass): List<Violation>
     -checkMethodName(method: ASMMethod): Violation
     -isLowerCamelCase(name: String): Boolean
+}
+
+class PascalCaseChecker extends Cursory{
+    +name(): String
+    +checkClass(cls: ASMClass): List<Violation>
+    -checkMethodName(method: ASMMethod): Violation
+    -isPascalCase(name: String): boolean
+}
+
+class MethodTooLongPattern extends Cursory{
+    -{static}MAX_PARAMETERS: int
+    -{static}MAX_SOURCE_LINES: int
+    -{static}MAX_BYTECODE_INSTRUCTIONS_FALLBACK: int
+    +name(): String
+    +checkClass(cls: ASMClass): List<Violation>
+    -analyzeMethod(method: ASMMethod): List<Violation>
+    -estimateLineCount(methodNode: MethodNode): int
+    -countRealInstructions(methodNode: MethodNode): int
 }
 
 class InterfaceSegregationPrinciple extends Principle {
@@ -99,20 +174,25 @@ class InterfaceSegregationPrinciple extends Principle {
     -isEmptyOrThrowsException(mn: MethodNode): boolean
 }
 
-class SingleResponsibilityPrinciple extends Principle {
+class SrpPrinciple extends Principle {
     {static} -MIN_PUBLIC_METHODS: int = 10
     {static} -MIN_TOTAL_METHODS: int = 20
     {static} -MIN_FIELDS: int = 8
     {static} -MIN_DISJOINT_RATIO: double = 0.5
     {static} -MIN_DEPENDENCY_PACKAGES: int = 3
+    -calculator: SrpMetricsCalculator
 
     +name(): String
     +checkClass(cls: ASMClass): List<Violation>
     -analyzeClass(classNode: ClassNode): Violation
     -computeFieldsAccessedPerMethod(classNode: ClassNode, methods: List<MethodNode>): Map<MethodNode, Set<String>>
-    -computeDisjointRatio(fieldsByMethod: Map<MethodNode, Set<String>>): double
-    -computeDependencyFanOut(classNode: ClassNode, methods: List<MethodNode>): int
 }
+
+class SrpMetricsCalculator {
+    +computeDisjointRatio(fieldsByMethod: Map<MethodNode, Set<String>>): double
+    +computeDependencyFanOut(classNode: ClassNode, methods: List<MethodNode>): int
+}
+
 class PrincipleOfLeastKnowledge extends Principle {
     +name(): String
     +checkClass(cls: ASMClass): List<Violation>
@@ -142,6 +222,16 @@ class OpenClosedPrinciple extends Principle{
 -countTypeCheckingOpcodes(method: ASMMethod): int
 +name(): String
 }
+
+class CohesionAnalyzer extends Principle{
++name(): String
++checkClass(cls: ASMClass): List<Violation>
+-calculateLCOM4(asmClass: ASMClass): int
+-extractMethodFieldUsage(asmClass: ASMClass, validMethods: List<String>, methodToFields: Map, methodToMethods: Map): void
+-buildConnectivityGraph(validMethods: List<String>, methodToFields: Map, methodToMethods: Map): Map<String, Set<String>>
+-countConnectedComponents(validMethods: List<String>, graph: Map<String, Set<String>>): int
+}
+
 class HollywoodPrinciple extends Principle{
 -strategy: HollywoodStrategy
 -resolvedMethodCache: Map<String, Set<String>>
@@ -157,14 +247,17 @@ interface HollywoodStrategy {
 +analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
 }
 
-class StrictHollywoodStrategy implements HollywoodStrategy {
--{static}EXCLUDED_METHODS: Set<String>
+abstract class AbstractHollywoodMethod implements HollywoodStrategy {
+    #{static}EXCLUDED_METHODS: Set<String>
+    #isUpwardCall(methodInsn: MethodInsnNode, currentClassName: String, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): boolean
+}
+
+class StrictHollywoodStrategy extends AbstractHollywoodMethod {
 +analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
 }
 
-class ThresholdHollywoodStrategy implements HollywoodStrategy {
+class ThresholdHollywoodStrategy extends AbstractHollywoodMethod {
 -threshold: int
--{static}EXCLUDED_METHODS: Set<String>
 +ThresholdHollywoodStrategy(threshold: int)
 +analyzeCoupling(cls: ASMClass, highLevelTypes: Set<String>, highLevelMethodSignatures: Set<String>): List<Violation>
 }
@@ -196,8 +289,6 @@ HollywoodThresholdPrinciple .. GuiNote
 
 HollywoodPrinciple o-down-> HollywoodStrategy
 
-
-
 abstract class Pattern implements LintCheck{
 +run(project: ASMProject): CheckResult
 #runPatternCheck(project: ASMProject): CheckResult
@@ -215,40 +306,81 @@ class TemplatePattern extends Pattern{
 +getDetectedPatterns(): List<TemplateMethodInfo>
 +getDetailedMessage(className: String): String
 }
-class StrategyPattern extends Pattern{
+
+class TemplateMethodInfo {
+    -className: String
+    -templateMethodName: String
+    -abstractMethodsCalled: List<String>
+    +TemplateMethodInfo(className: String, templateMethodName: String)
+    +addAbstractMethodCall(methodName: String): void
+    +getClassName(): String
+    +getTemplateMethodName(): String
+    +getAbstractMethodsCalled(): List<String>
+    +formatDetails(): String
 }
 
+class StrategyPattern extends Pattern{
+    -{static}MIN_SWITCHES_FOR_HOTSPOT: int
+    -{static}MIN_BRANCHES_FOR_HOTSPOT: int
+    -{static}MIN_INSTANCEOF_FOR_HOTSPOT: int
+    -{static}MIN_DISTINCT_CALL_OWNERS_SWITCH: int
+    -{static}MIN_NEW_TYPES_SWITCH: int
+    -{static}MIN_DISTINCT_CALL_OWNERS_BRANCH: int
+    -{static}MIN_REAL_INSTRUCTIONS: int
+    +name(): String
+    +runPatternCheck(project: ASMProject): CheckResult
+    -analyzeMethod(classNode: ClassNode, methodNode: MethodNode): Violation
+    -collectMetrics(methodNode: MethodNode): Metrics
+    -isIfOpcode(opcode: int): boolean
+}
 
 class DecoratorPattern extends Pattern{
     +name(): String
     #isPattern(cls: ASMClass): boolean
     -getCleanType(desc: String): String
 }
+
 class AdapterPattern extends Pattern{
 +name(): String
 +getDetails(asmClass: ASMClass): String
-+isPattern(asmClass: ASMClass): double
++isPattern(asmClass: ASMClass): boolean
 -getRatio(asmClass: ASMClass): double
 -methodUsesField(method: ASMMethod, fieldOwner: String, fieldName: String): boolean
 -findPotentialAdapteeFields(asmClass: ASMClass): List<FieldNode>
 -getAdapteeFieldName(asmClass: ASMClass): String
--fieldTypeMatchesInterfaces(asmClass: ASMClass, field: FieldNode)
+-fieldTypeMatchesInterfaces(asmClass: ASMClass, field: FieldNode): boolean
 }
 
 interface LintCheck {
 +run(project: ASMProject): CheckResult
 }
 
+enum SeverityLevel {
+    ERROR
+    WARNING
+    INFO
+    -color: Color
+    +getColor(): Color
+    +{static}fromString(s: String): SeverityLevel
+}
+
 class Violation{
 -message: String
 -location: String
--severity: String
-+Violation(method: String, location: String)
-+Violation(method: String)
+-severity: SeverityLevel
++Violation(message: String, location: String, severity: SeverityLevel)
++Violation(message: String, location: String, severity: String)
++Violation(message: String, location: String)
++Violation(message: String)
++getMessage(): String
++getLocation(): String
++getSeverityLevel(): SeverityLevel
++getSeverity(): String
++toString(): String
 }
 
 class CheckResult{
--violations: List<Violations>
+-violations: List<Violation>
 -classesChecked: int
 -methodsChecked: int
 -analysisErrors: List<String>
@@ -279,18 +411,41 @@ class ASMClass {
 -classNode: ClassNode
 -methods: List<ASMMethod>
 +ASMClass(classNode: ClassNode)
++getClassName(): String
++getMethods(): List<ASMMethod>
++getClassNode(): ClassNode
++isInterface(): boolean
++isAbstract(): boolean
 }
 
 class ASMMethod {
 -className: String
 -methodName: String
 -methodNode: MethodNode
--frames: Frame
--instructions: List<Instruction>
--analysisSucceeded: boolean
--analysisError: String
+-basicFrames: Frame<BasicValue>[]
+-basicInstructions: List<Instruction>
+-basicAnalysisSucceeded: boolean
+-simpleFrames: Frame<BasicValue>[]
+-simpleInstructions: List<Instruction>
+-simpleAnalysisSucceeded: boolean
 +ASMMethod(className: String, methodNode: MethodNode)
-+buildInstructions(methodNode: MethodNode, frame: Frame<BasicValue>[]): List<Instruction>
+-performAnalysis(interpreter: Interpreter<BasicValue>, className: String, methodNode: MethodNode): AnalysisResult
+-buildInstructions(methodNode: MethodNode, frames: Frame<BasicValue>[]): List<Instruction>
++getClassName(): String
++getMethodName(): String
++getFullMethodName(): String
++getInstructions(): List<Instruction>
++getInstructionsWithTypeInfo(): List<Instruction>
++isAnalysisSuccessful(): boolean
++isTypeInfoAvailable(): boolean
++getMethodNode(): MethodNode
++getFrames(): Frame<BasicValue>[]
++getSimpleFrames(): Frame<BasicValue>[]
+}
+
+class "ASMMethod.AnalysisResult" as AnalysisResult {
+    -frames: Frame<BasicValue>[]
+    -succeeded: boolean
 }
 
 class ASMProject {
@@ -320,45 +475,71 @@ class StackValuePair {
 }
 }
 
-
-' Presentation to Domain
 LinterOutputText ..up> LinterResult
 
-' Domain to Data
 LinterHandler -down-> ASMProject
 LinterHandler -right-> "*" LintCheck
 LinterHandler ..> LinterResult
 
 CheckResult --> "*" Violation
 LinterResult --> "*" CheckResult
+Violation --> SeverityLevel
 
-' Data Layer Internal
 ASMProject --> "*" ASMClass
 ASMClass --> "*" ASMMethod
 ASMMethod --> "*" Instruction
+ASMMethod --> AnalysisResult
 Instruction ..> StackValuePair
 ConvertToASM ..> ASMProject
 
-' GUI wiring (Presentation)
+SrpPrinciple --> SrpMetricsCalculator
+TemplatePattern --> "*" TemplateMethodInfo
+CohesionAnalyzer ..> ASMClass
+
 LinterGuiMain --> LinterGuiFrame
 LinterGuiFrame --> CheckCatalog
 LinterGuiFrame --> DefaultTargetLocator
 LinterGuiFrame --> RunLinterWorker
 LinterGuiFrame --> ResultsAccordionPanel
+LinterGuiFrame --> LinterService
 LinterGuiFrame ..> LinterResult
 LinterGuiFrame ..> CheckDescriptor
 
-RunLinterWorker --> ConvertToASM
-RunLinterWorker --> LinterHandler
+LinterCLI --> LinterService
+LinterCLI ..> LinterResult
+LinterCLI ..> ReportRenderer
+
+LinterService --> ConvertToASM
+LinterService --> LinterHandler
+LinterService ..> LinterResult
+
+RunLinterWorker --> LinterService
 RunLinterWorker --> LinterOutputText
 RunLinterWorker ..> LinterResult
 RunLinterWorker ..> RunResult
 
 ResultsAccordionPanel ..> Violation
+ResultsAccordionPanel ..> SeverityLevel
+ResultsAccordionPanel --> ViolationFilter
+ResultsAccordionPanel --> "*" CollapsibleCheckPanel
 ResultsAccordionPanel --> "0..*" CheckGroup
+
+CollapsibleCheckPanel ..> Violation
+
 CheckCatalog ..> LintCheck
 CheckCatalog --> "0..*" CheckDescriptor
 CheckDescriptor ..> LintCheck
 CheckCatalog ..> CheckCatalogCategory
+
+ConfigLoader ..> CheckCatalog
+ConfigLoader ..> LintCheck
+
+SeverityCellRenderer ..> SeverityLevel
+ViolationTableModel --> "*" ViolationRow
+
+ReportRenderer ..> LinterResult
+JsonRenderer ..> LinterResult
+TextRenderer ..> LinterResult
+HtmlRenderer ..> LinterResult
 
 @enduml
