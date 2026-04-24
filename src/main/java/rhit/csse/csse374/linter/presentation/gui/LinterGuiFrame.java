@@ -7,6 +7,7 @@ import rhit.csse.csse374.linter.domain.LinterResult;
 import rhit.csse.csse374.linter.domain.Pattern;
 import rhit.csse.csse374.linter.domain.Principle;
 import rhit.csse.csse374.linter.domain.Violation;
+import rhit.csse.csse374.linter.presentation.JsonReportWriter;
 import rhit.csse.csse374.linter.presentation.gui.CheckCatalog.CheckDescriptor;
 
 import javax.swing.*;
@@ -372,26 +373,7 @@ public class LinterGuiFrame extends JFrame {
         if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
         try (java.io.PrintWriter out = new java.io.PrintWriter(chooser.getSelectedFile())) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{\n  \"project\": \"").append(lastResult.getProjectPath()).append("\",\n");
-            sb.append("  \"totalViolations\": ").append(lastResult.getTotalViolationCount()).append(",\n");
-            sb.append("  \"violations\": [\n");
-
-            List<Violation> all = new ArrayList<>();
-            lastResult.getCursoryResults().forEach(r -> all.addAll(r.getViolations()));
-            lastResult.getPrincipleResults().forEach(r -> all.addAll(r.getViolations()));
-            lastResult.getPatternResults().forEach(r -> all.addAll(r.getViolations()));
-
-            for (int i = 0; i < all.size(); i++) {
-                Violation v = all.get(i);
-                sb.append("    {\n");
-                sb.append("      \"location\": \"").append(v.getLocation()).append("\",\n");
-                sb.append("      \"severity\": \"").append(v.getSeverity()).append("\",\n");
-                sb.append("      \"message\": \"").append(v.getLocation().replace("\"", "\\\"")).append("\"\n");
-                sb.append("    }").append(i < all.size() - 1 ? "," : "").append("\n");
-            }
-            sb.append("  ]\n}");
-            out.print(sb.toString());
+            out.print(new JsonReportWriter().toJson(lastResult));
             JOptionPane.showMessageDialog(this, "Export complete!");
         } catch (Exception ex) {
             showWarning("Export error", "Failed to save JSON: " + ex.getMessage());
