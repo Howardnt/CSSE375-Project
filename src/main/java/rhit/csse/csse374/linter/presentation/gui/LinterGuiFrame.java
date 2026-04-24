@@ -1,5 +1,7 @@
 package rhit.csse.csse374.linter.presentation.gui;
 
+import rhit.csse.csse374.linter.data.JsonLinterConfigLoader;
+import rhit.csse.csse374.linter.data.LinterConfig;
 import rhit.csse.csse374.linter.domain.Cursory;
 import rhit.csse.csse374.linter.domain.CheckResult;
 import rhit.csse.csse374.linter.domain.LintCheck;
@@ -14,6 +16,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +33,7 @@ public class LinterGuiFrame extends JFrame {
     private final JTextField targetPathField = new JTextField();
     private final JButton browseButton = new JButton("Browse…");
     private final JButton defaultButton = new JButton("Use default output");
+    private final JButton loadConfigButton = new JButton("Load config…");
 
     private final JButton runButton = new JButton("Run");
     private final JProgressBar progressBar = new JProgressBar();
@@ -92,6 +97,7 @@ public class LinterGuiFrame extends JFrame {
         panel.add(left, BorderLayout.CENTER);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        right.add(loadConfigButton);
         right.add(defaultButton);
         right.add(browseButton);
         panel.add(right, BorderLayout.EAST);
@@ -189,7 +195,44 @@ public class LinterGuiFrame extends JFrame {
     private void wireActions() {
         browseButton.addActionListener(e -> onBrowse());
         defaultButton.addActionListener(e -> onUseDefault());
+        loadConfigButton.addActionListener(e -> onLoadConfig());
         runButton.addActionListener(e -> onRun());
+    }
+
+    private void onLoadConfig() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select linter config (.json)");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        File selected = chooser.getSelectedFile();
+        if (selected == null) {
+            return;
+        }
+        try {
+            LinterConfig config = new JsonLinterConfigLoader().load(Path.of(selected.getAbsolutePath()));
+            cursoryTab.applyConfig(config);
+            principleTab.applyConfig(config);
+            patternTab.applyConfig(config);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Applied config from " + selected.getName(),
+                    "Config loaded",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not read config file:\n" + e.getMessage(),
+                    "Config error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (JsonLinterConfigLoader.ConfigParseException e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid config file:\n" + e.getMessage(),
+                    "Config error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void onBrowse() {
@@ -445,6 +488,12 @@ public class LinterGuiFrame extends JFrame {
         void resetToDefaults() {
             for (int i = 0; i < descriptors.size(); i++) {
                 checkBoxes.get(i).setSelected(descriptors.get(i).defaultSelected());
+            }
+        }
+
+        void applyConfig(LinterConfig config) {
+            for (int i = 0; i < descriptors.size(); i++) {
+                checkBoxes.get(i).setSelected(config.isEnabled(descriptors.get(i).id()));
             }
         }
 

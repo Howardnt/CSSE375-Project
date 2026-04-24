@@ -1,5 +1,7 @@
 package rhit.csse.csse374.linter.presentation;
 
+import rhit.csse.csse374.linter.data.JsonLinterConfigLoader;
+import rhit.csse.csse374.linter.data.LinterConfig;
 import rhit.csse.csse374.linter.domain.Cursory;
 import rhit.csse.csse374.linter.domain.LintCheck;
 import rhit.csse.csse374.linter.domain.Pattern;
@@ -7,7 +9,9 @@ import rhit.csse.csse374.linter.domain.Principle;
 import rhit.csse.csse374.linter.presentation.gui.CheckCatalog;
 import rhit.csse.csse374.linter.presentation.gui.CheckCatalog.CheckDescriptor;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -72,8 +76,12 @@ public final class LinterCLI {
         if (categories == null) {
             return EXIT_USAGE;
         }
+        LinterConfig config = parseConfig(args, err);
+        if (config == null) {
+            return EXIT_USAGE;
+        }
 
-        LinterService.Request request = buildRequest(targetPath, categories);
+        LinterService.Request request = buildRequest(targetPath, categories, config);
         LinterService.Response response;
         try {
             response = service.run(request);
@@ -109,6 +117,29 @@ public final class LinterCLI {
         return EnumSet.allOf(CheckCatalog.Category.class);
     }
 
+    private LinterConfig parseConfig(String[] args, PrintStream err) {
+        for (int i = 1; i < args.length; i++) {
+            if (!"--config".equals(args[i])) {
+                continue;
+            }
+            if (i + 1 >= args.length) {
+                err.println("--config requires a path to a JSON file");
+                return null;
+            }
+            String path = args[i + 1];
+            try {
+                return new JsonLinterConfigLoader().load(Path.of(path));
+            } catch (IOException e) {
+                err.println("Could not read config file '" + path + "': " + e.getMessage());
+                return null;
+            } catch (JsonLinterConfigLoader.ConfigParseException e) {
+                err.println("Invalid config file '" + path + "': " + e.getMessage());
+                return null;
+            }
+        }
+        return LinterConfig.allEnabled();
+    }
+
     private Set<CheckCatalog.Category> readCategoryList(String raw, PrintStream err) {
         Set<CheckCatalog.Category> result = EnumSet.noneOf(CheckCatalog.Category.class);
         for (String piece : raw.split(",")) {
@@ -134,13 +165,17 @@ public final class LinterCLI {
         return result;
     }
 
-    private LinterService.Request buildRequest(String path, Set<CheckCatalog.Category> categories) {
+    private LinterService.Request buildRequest(
+            String path, Set<CheckCatalog.Category> categories, LinterConfig config) {
         List<Cursory> cursories = new ArrayList<>();
         List<Principle> principles = new ArrayList<>();
         List<Pattern> patterns = new ArrayList<>();
 
         for (CheckDescriptor d : catalogSupplier.get()) {
             if (!categories.contains(d.category())) {
+                continue;
+            }
+            if (!config.isEnabled(d.id())) {
                 continue;
             }
             LintCheck check = d.create();
@@ -154,9 +189,10 @@ public final class LinterCLI {
     }
 
     private void printUsage(PrintStream out) {
-        out.println("Usage: linter <path> [--only cursory,principle,pattern,all] [--help]");
+        out.println("Usage: linter <path> [--only cursory,principle,pattern,all] [--config <file>] [--help]");
         out.println("  <path>                   directory of .class files or a single .class file");
         out.println("  --only <categories>      comma-separated check categories (default: all)");
+        out.println("  --config <file>          JSON config file enabling/disabling individual checks");
         out.println("  --help, -h               show this message");
         out.println();
         out.println("Exit codes: 0=clean, 1=violations, 2=usage, 3=error");
