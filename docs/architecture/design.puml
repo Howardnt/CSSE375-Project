@@ -50,7 +50,14 @@ package "Presentation" as presentation {
         -rebuild(): void
       }
       class ViolationFilter {
-        +filterViolations(violations: List<Violation>, severity: String, query: String): List<Violation>
+        {static} +SEVERITY_ALL: String
+        -severity: String
+        -query: String
+        +ViolationFilter(severity: String, query: String)
+        +apply(violations: List<Violation>): List<Violation>
+        +isActive(): boolean
+        -matchesSeverity(v: Violation): boolean
+        -matchesQuery(v: Violation): boolean
       }
       class CollapsibleCheckPanel {
         -headerButton: JToggleButton
@@ -83,26 +90,51 @@ package "Presentation" as presentation {
       }
 
       class LinterCLI {
-        +main(args: String[]): void
-        -parseArgs(args: String[]): CLIOptions
-        -printResults(result: LinterResult): void
+        {static} +EXIT_OK: int
+        {static} +EXIT_VIOLATIONS: int
+        {static} +EXIT_USAGE: int
+        {static} +EXIT_ERROR: int
+        -service: LinterService
+        -catalogSupplier: Supplier<List<CheckDescriptor>>
+        +LinterCLI()
+        +LinterCLI(service: LinterService, catalogSupplier: Supplier<List<CheckDescriptor>>)
+        {static} +main(args: String[]): void
+        +run(args: String[], out: PrintStream, err: PrintStream): int
+        -parseCategories(args: String[], err: PrintStream): Set<Category>
+        -parseConfig(args: String[], err: PrintStream): LinterConfig
+        -buildRequest(path: String, categories: Set<Category>, config: LinterConfig): Request
       }
 
       class LinterService {
-        +runAnalysis(projectPath: String, checks: List<LintCheck>): LinterResult
+        -projectLoader: Function<String, ASMProject>
+        +LinterService()
+        +LinterService(projectLoader: Function<String, ASMProject>)
+        +run(request: Request): Response
       }
 
-      interface ReportRenderer {
-        +render(result: LinterResult): String
+      class "LinterService.Request" as ServiceRequest {
+        +projectPath: String
+        +cursories: List<Cursory>
+        +principles: List<Principle>
+        +patterns: List<Pattern>
       }
-      class JsonRenderer implements ReportRenderer {
-        +render(result: LinterResult): String
+
+      class "LinterService.Response" as ServiceResponse {
+        +result: LinterResult
+        +formattedText: String
       }
-      class TextRenderer implements ReportRenderer {
-        +render(result: LinterResult): String
+
+      class JsonReportWriter {
+        +toJson(result: LinterResult): String
+        -collectAllViolations(result: LinterResult): List<Violation>
+        -appendViolation(sb: StringBuilder, v: Violation, isLast: boolean): void
       }
-      class HtmlRenderer implements ReportRenderer {
-        +render(result: LinterResult): String
+
+      class ResultsSummary {
+        {static} -SEPARATOR: String
+        +format(result: LinterResult, runDuration: Duration): String
+        -countBySeverity(result: LinterResult): Map<SeverityLevel, Integer>
+        ~formatDuration(d: Duration): String
       }
 }
 
@@ -123,11 +155,6 @@ class ConvertToASM{
 +loadClassesFromPath(path: String): List<ClassNode>
 +findAndLoadClassFiles(directory: File, classNodes: List<ClassNode>): void
 +loadClassFile(classFile: File): ClassNode
-}
-
-class ConfigLoader {
-    +loadConfig(path: String): Map<String, Boolean>
-    +applyConfig(config: Map<String, Boolean>, catalog: CheckCatalog): List<LintCheck>
 }
 
 abstract class Cursory implements LintCheck{
@@ -473,6 +500,34 @@ class StackValuePair {
 +getSecondType(): Type
 +isNullValue(): boolean
 }
+
+interface LinterConfig {
++isEnabled(checkId: String): boolean
++optionsFor(checkId: String): Map<String, String>
++{static}allEnabled(): LinterConfig
+}
+
+class MapLinterConfig implements LinterConfig {
+-enabledByKey: Map<String, Boolean>
+-optionsByKey: Map<String, Map<String, String>>
+-defaultEnabled: boolean
++MapLinterConfig(enabledByKey: Map, optionsByKey: Map, defaultEnabled: boolean)
++isEnabled(checkId: String): boolean
++optionsFor(checkId: String): Map<String, String>
++defaultEnabled(): boolean
+}
+
+class JsonLinterConfigLoader {
++load(path: Path): LinterConfig
++read(reader: Reader): LinterConfig
++parse(json: String): LinterConfig
+-parseRoot(root: JsonObject): LinterConfig
+}
+
+class "JsonLinterConfigLoader.ConfigParseException" as ConfigParseException {
++ConfigParseException(message: String)
++ConfigParseException(message: String, cause: Throwable)
+}
 }
 
 LinterOutputText ..up> LinterResult
@@ -501,20 +556,29 @@ LinterGuiFrame --> CheckCatalog
 LinterGuiFrame --> DefaultTargetLocator
 LinterGuiFrame --> RunLinterWorker
 LinterGuiFrame --> ResultsAccordionPanel
-LinterGuiFrame --> LinterService
+LinterGuiFrame --> JsonReportWriter
+LinterGuiFrame --> ResultsSummary
 LinterGuiFrame ..> LinterResult
 LinterGuiFrame ..> CheckDescriptor
+LinterGuiFrame ..> LinterConfig
+LinterGuiFrame ..> JsonLinterConfigLoader
 
 LinterCLI --> LinterService
+LinterCLI --> CheckCatalog
 LinterCLI ..> LinterResult
-LinterCLI ..> ReportRenderer
+LinterCLI ..> LinterConfig
+LinterCLI ..> JsonLinterConfigLoader
+LinterCLI ..> ServiceRequest
+LinterCLI ..> ServiceResponse
 
 LinterService --> ConvertToASM
 LinterService --> LinterHandler
+LinterService --> LinterOutputText
 LinterService ..> LinterResult
+LinterService +-- ServiceRequest
+LinterService +-- ServiceResponse
 
 RunLinterWorker --> LinterService
-RunLinterWorker --> LinterOutputText
 RunLinterWorker ..> LinterResult
 RunLinterWorker ..> RunResult
 
@@ -526,20 +590,27 @@ ResultsAccordionPanel --> "0..*" CheckGroup
 
 CollapsibleCheckPanel ..> Violation
 
+ViolationFilter ..> Violation
+ViolationFilter ..> SeverityLevel
+
 CheckCatalog ..> LintCheck
 CheckCatalog --> "0..*" CheckDescriptor
 CheckDescriptor ..> LintCheck
 CheckCatalog ..> CheckCatalogCategory
 
-ConfigLoader ..> CheckCatalog
-ConfigLoader ..> LintCheck
+JsonLinterConfigLoader ..> LinterConfig
+JsonLinterConfigLoader ..> MapLinterConfig
+JsonLinterConfigLoader +-- ConfigParseException
+MapLinterConfig ..|> LinterConfig
+
+JsonReportWriter ..> LinterResult
+JsonReportWriter ..> Violation
+
+ResultsSummary ..> LinterResult
+ResultsSummary ..> SeverityLevel
+ResultsSummary ..> Violation
 
 SeverityCellRenderer ..> SeverityLevel
 ViolationTableModel --> "*" ViolationRow
-
-ReportRenderer ..> LinterResult
-JsonRenderer ..> LinterResult
-TextRenderer ..> LinterResult
-HtmlRenderer ..> LinterResult
 
 @enduml
