@@ -10,6 +10,7 @@ import rhit.csse.csse374.linter.domain.Pattern;
 import rhit.csse.csse374.linter.domain.Principle;
 import rhit.csse.csse374.linter.domain.Violation;
 import rhit.csse.csse374.linter.presentation.JsonReportWriter;
+import rhit.csse.csse374.linter.presentation.ResultsSummary;
 import rhit.csse.csse374.linter.presentation.gui.CheckCatalog.CheckDescriptor;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +52,11 @@ public class LinterGuiFrame extends JFrame {
     private final JTextArea summaryArea = new JTextArea();
     private final ResultsAccordionPanel accordionPanel = new ResultsAccordionPanel();
     private final JTextArea rawReportArea = new JTextArea();
+    private final JLabel summaryBanner = new JLabel("Ready.");
+    private final ResultsSummary resultsSummary = new ResultsSummary();
 
     private volatile RunLinterWorker activeWorker;
+    private long runStartNanos;
 
     public LinterGuiFrame() {
         super("CSSE374 Design Linter");
@@ -157,6 +162,12 @@ public class LinterGuiFrame extends JFrame {
     }
 
     private JComponent buildResultsPane() {
+        JPanel root = new JPanel(new BorderLayout(0, 6));
+
+        summaryBanner.setBorder(new EmptyBorder(6, 10, 6, 10));
+        summaryBanner.setFont(summaryBanner.getFont().deriveFont(Font.BOLD));
+        root.add(summaryBanner, BorderLayout.NORTH);
+
         JTabbedPane tabs = new JTabbedPane();
 
         summaryArea.setEditable(false);
@@ -170,7 +181,8 @@ public class LinterGuiFrame extends JFrame {
         rawReportArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
         tabs.addTab("Raw report", new JScrollPane(rawReportArea));
 
-        return tabs;
+        root.add(tabs, BorderLayout.CENTER);
+        return root;
     }
 
     private JComponent buildBottomBar() {
@@ -289,6 +301,8 @@ public class LinterGuiFrame extends JFrame {
         PreparedChecks prepared = prepareChecks(selected);
 
         setRunning(true);
+        runStartNanos = System.nanoTime();
+        summaryBanner.setText("Running…");
         summaryArea.setText("Running analysis...\n\nTarget: " + target.getAbsolutePath());
         rawReportArea.setText("");
 
@@ -390,6 +404,9 @@ public class LinterGuiFrame extends JFrame {
     private void onRunCompleted(RunLinterWorker.RunResult runResult) {
         this.lastResult = runResult.result();
         LinterResult result = runResult.result();
+
+        Duration runDuration = Duration.ofNanos(System.nanoTime() - runStartNanos);
+        summaryBanner.setText(resultsSummary.format(result, runDuration));
 
         summaryArea.setText(
                 "Run complete.\n\n" +
