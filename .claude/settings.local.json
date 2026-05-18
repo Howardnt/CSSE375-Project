@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"c:/Users/perkowe/OneDrive -:*)"
+      "Bash(\"c:/Users/perkowe/OneDrive -:*)",
+      "Bash(mvn -q test -Dtest='LinterServiceTest,LinterCLITest')",
+      "Bash(mvn test *)",
+      "Bash(mvn -q compile)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(mvn -q test)",
+      "Bash(mvn -q test -Dtest=ResultsSummaryTest)",
+      "Bash(cp -r target/classes USB/demo-targets/linter-self)",
+      "Bash(cp -r target/test-classes/fixtures USB/demo-targets/fixtures)",
+      "Bash(grep '\\\\.class$')",
+      "Bash(mvn clean *)"
     ]
   }
 }
