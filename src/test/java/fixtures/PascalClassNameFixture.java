@@ -21,3 +21,23 @@ class badPascalCaseExample {
     int value = 13;
 }
 
+// ===== Inner-class handling fixture =====
+// Compiles to:
+//   GoodOuterClass.class
+//   GoodOuterClass$GoodInner.class
+//   GoodOuterClass$1.class            (anonymous inner)
+// All three should produce zero violations — inner-class files must
+// not double-flag the outer.
+class GoodOuterClass {
+    static class GoodInner {
+        int value = 1;
+    }
+
+    Runnable anonymous = new Runnable() {
+        @Override
+        public void run() {
+            //noop
+        }
+    };
+}
+

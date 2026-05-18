@@ -16,14 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for JsonReportWriter.
  *
- * Before Refactoring 10 the JSON construction lived inside a Swing action
- * handler and could not be tested without a visible frame. After extraction
- * it is a pure function (LinterResult -> String) that we verify here.
+ * Before Refactoring 10 (M3) the JSON construction lived inside a Swing
+ * action handler and could not be tested without a visible frame. After
+ * extraction it is a pure function (LinterResult -> String) we verify here.
  *
- * These tests lock in the *current* output format, including two pre-existing
- * quirks preserved by this pure refactoring: lack of general JSON escaping,
- * and the "message" field carrying the location string. Fixing those is a
- * separate commit.
+ * In M4 the two pre-existing quirks the M3 refactoring preserved — no
+ * general string escaping, and the "message" field emitting the location
+ * string — were fixed. These tests now pin the *correct* behavior.
  */
 public class JsonReportWriterTest {
 
@@ -100,16 +99,59 @@ public class JsonReportWriterTest {
     }
 
     @Test
-    void embeddedQuotesInLocationAreEscapedInMessageField() {
-        //Preserves the original escaping quirk: only the "message" slot
-        //(which actually carries the location) gets its quotes escaped
+    void embeddedQuotesInLocationAreEscapedInLocationField() {
         LinterResult result = resultWith(
                 new Violation("msg", "weird\"name", SeverityLevel.WARNING));
 
         String json = writer.toJson(result);
 
-        assertTrue(json.contains("\"message\": \"weird\\\"name\""),
-                "Quotes in the location string must be backslash-escaped in the message field");
+        assertTrue(json.contains("\"location\": \"weird\\\"name\""),
+                "Quotes in the location string must be backslash-escaped in the location field");
+    }
+
+    @Test
+    void messageFieldEmitsTheActualViolationMessage() {
+        //M4 fix: previously the "message" field emitted the *location* string,
+        //which made JSON consumers unable to read the actual violation message.
+        //Now the field correctly carries the message and the location lives
+        //only in the "location" field.
+        LinterResult result = resultWith(
+                new Violation("equals() is missing", "com.example.Foo", SeverityLevel.ERROR));
+
+        String json = writer.toJson(result);
+
+        assertTrue(json.contains("\"message\": \"equals() is missing\""),
+                "The \"message\" field must carry the violation's message, not the location");
+        assertTrue(json.contains("\"location\": \"com.example.Foo\""),
+                "The \"location\" field carries the location");
+    }
+
+    @Test
+    void backslashAndControlCharactersAreEscaped() {
+        //M4 fix: general JSON escaping (not just quotes). Backslashes, newlines,
+        //tabs etc must be properly encoded so the output parses as strict JSON.
+        LinterResult result = resultWith(
+                new Violation("line1\nline2\ttabbed", "weird\\path", SeverityLevel.WARNING));
+
+        String json = writer.toJson(result);
+
+        assertTrue(json.contains("\"message\": \"line1\\nline2\\ttabbed\""),
+                "Newlines and tabs in messages must be escaped");
+        assertTrue(json.contains("\"location\": \"weird\\\\path\""),
+                "Backslashes in locations must be doubled to escape");
+    }
+
+    @Test
+    void projectPathWithSpecialCharsIsEscaped() {
+        LinterResult result = new LinterResult(
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                0, 0, 0, 0,
+                "path/with\"quote");
+
+        String json = writer.toJson(result);
+
+        assertTrue(json.contains("\"project\": \"path/with\\\"quote\""),
+                "Project path must be JSON-escaped");
     }
 
     @Test

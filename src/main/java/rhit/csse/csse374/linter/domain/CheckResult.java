@@ -42,6 +42,10 @@ public class CheckResult {
         return !analysisErrors.isEmpty();
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         if (violations.isEmpty()) {

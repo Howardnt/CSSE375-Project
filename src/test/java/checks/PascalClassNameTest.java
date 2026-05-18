@@ -51,4 +51,32 @@ public class PascalClassNameTest {
         assertTrue(foundBadClass,
             "Expected a violation for 'badPascalCaseExample', got: " + violations);
     }
+
+    @Test
+    void innerAndAnonymousClassesDoNotProduceFalsePositives() {
+        //GoodOuterClass$GoodInner and GoodOuterClass$1 share PascalCase
+        //goodness with their outer. Their .class files must not produce
+        //violations — the outer's check is what reports any naming issue.
+        List<Violation> violations = result.getViolations();
+        long innerClassViolations = violations.stream()
+            .filter(v -> v.getLocation().contains("GoodOuterClass$"))
+            .count();
+        assertEquals(0, innerClassViolations,
+            "Inner/anonymous class files must not produce their own violations, got: "
+                + violations);
+    }
+
+    @Test
+    void badOuterClassIsReportedExactlyOnce() {
+        //M4 fix: previously a lowercase outer class with N inner classes
+        //produced N+1 violations (one for the outer's own file, plus one for
+        //each inner-class file). Inner-class files are now skipped, so this
+        //should be exactly 1 even if inner classes existed.
+        List<Violation> violations = result.getViolations();
+        long badClassViolations = violations.stream()
+            .filter(v -> v.getLocation().toLowerCase().contains("badpascalcaseexample"))
+            .count();
+        assertEquals(1, badClassViolations,
+            "A bad outer class must be flagged exactly once, got: " + badClassViolations);
+    }
 }

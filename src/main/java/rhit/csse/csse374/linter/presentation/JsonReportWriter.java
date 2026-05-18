@@ -10,14 +10,11 @@ import java.util.List;
 /**
  * Serializes a LinterResult into a JSON string.
  *
- * Extracted from LinterGuiFrame.onExportJson so the JSON shape is testable
- * without Swing and reusable from the CLI (future "--json" flag). This class
- * intentionally preserves the original output format byte-for-byte, including
- * two pre-existing quirks:
- *   - String fields are not JSON-escaped (only the "message" value is),
- *     matching the original behavior.
- *   - The "message" field emits the location string rather than the message.
- * Those quirks are left alone here because this commit is a pure refactoring.
+ * Renders the project path, total violation count, and the full list of
+ * violations grouped flat. All string fields are JSON-escaped so the output
+ * is parseable by any strict JSON consumer.
+ *
+ * Sibling to LinterOutputText (plain text) and HtmlReportWriter (HTML).
  */
 public final class JsonReportWriter {
 
@@ -27,7 +24,7 @@ public final class JsonReportWriter {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n  \"project\": \"").append(result.getProjectPath()).append("\",\n");
+        sb.append("{\n  \"project\": \"").append(escape(result.getProjectPath())).append("\",\n");
         sb.append("  \"totalViolations\": ").append(result.getTotalViolationCount()).append(",\n");
         sb.append("  \"violations\": [\n");
 
@@ -56,11 +53,36 @@ public final class JsonReportWriter {
 
     private void appendViolation(StringBuilder sb, Violation v, boolean isLast) {
         sb.append("    {\n");
-        sb.append("      \"location\": \"").append(v.getLocation()).append("\",\n");
-        sb.append("      \"severity\": \"").append(v.getSeverity()).append("\",\n");
-        //Preserves the original (buggy) mapping: "message" field carries the
-        //escaped location string. Fixing this is out of scope for this refactoring.
-        sb.append("      \"message\": \"").append(v.getLocation().replace("\"", "\\\"")).append("\"\n");
+        sb.append("      \"location\": \"").append(escape(v.getLocation())).append("\",\n");
+        sb.append("      \"severity\": \"").append(escape(v.getSeverity())).append("\",\n");
+        sb.append("      \"message\": \"").append(escape(v.getMessage())).append("\"\n");
         sb.append("    }").append(isLast ? "" : ",").append("\n");
+    }
+
+    static String escape(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(raw.length() + 8);
+        for (int i = 0; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            switch (c) {
+                case '"' -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                case '\b' -> sb.append("\\b");
+                case '\f' -> sb.append("\\f");
+                default -> {
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 }

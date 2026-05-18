@@ -9,6 +9,7 @@ import rhit.csse.csse374.linter.domain.LinterResult;
 import rhit.csse.csse374.linter.domain.Pattern;
 import rhit.csse.csse374.linter.domain.Principle;
 import rhit.csse.csse374.linter.domain.Violation;
+import rhit.csse.csse374.linter.presentation.HtmlReportWriter;
 import rhit.csse.csse374.linter.presentation.JsonReportWriter;
 import rhit.csse.csse374.linter.presentation.ResultsSummary;
 import rhit.csse.csse374.linter.presentation.gui.CheckCatalog.CheckDescriptor;
@@ -18,6 +19,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
@@ -196,8 +198,11 @@ public class LinterGuiFrame extends JFrame {
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         JButton exportButton = new JButton("Export JSON");
-        exportButton.addActionListener(e -> onExportJson()); 
+        exportButton.addActionListener(e -> onExportJson());
+        JButton htmlReportButton = new JButton("View HTML report");
+        htmlReportButton.addActionListener(e -> onViewHtmlReport());
         right.add(exportButton);
+        right.add(htmlReportButton);
         right.add(runButton);
         panel.add(right, BorderLayout.EAST);
 
@@ -437,6 +442,32 @@ public class LinterGuiFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Export complete!");
         } catch (Exception ex) {
             showWarning("Export error", "Failed to save JSON: " + ex.getMessage());
+        }
+    }
+
+    private void onViewHtmlReport() {
+        if (lastResult == null) {
+            showWarning("No data", "Please run a scan before viewing the HTML report.");
+            return;
+        }
+
+        try {
+            //Write to an OS temp file so the user's default browser can load it.
+            //File lives until the OS cleans up its temp directory.
+            Path tempFile = Files.createTempFile("linter-report-", ".html");
+            Files.writeString(tempFile, new HtmlReportWriter().toHtml(lastResult));
+
+            if (!Desktop.isDesktopSupported()
+                    || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                showWarning(
+                        "Browser not available",
+                        "HTML report was written to:\n" + tempFile
+                                + "\n\nOpen it manually — this platform does not support java.awt.Desktop.browse().");
+                return;
+            }
+            Desktop.getDesktop().browse(tempFile.toUri());
+        } catch (IOException ex) {
+            showWarning("HTML report failed", "Could not generate or open report:\n" + ex.getMessage());
         }
     }
 

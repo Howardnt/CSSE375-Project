@@ -31,13 +31,12 @@ public class PascalClassName extends Cursory {
         String fullName = classNode.name;
         String simpleName = getSimpleClassName(fullName);
 
-        // Skip anonymous or synthetic classes (e.g., "ClassName$1")
+        //Skip inner / anonymous / synthetic class files (e.g. "Outer$Inner",
+        //"Outer$1"). They share their .class output with the outer class file,
+        //which is scanned separately — flagging the outer's name twice would
+        //produce a duplicate violation per inner class. The outer's own
+        //file is what reports any naming violation.
         if (simpleName.contains("$")) {
-            String outerClassName = simpleName.substring(0, simpleName.indexOf('$'));
-            if (!isPascalCase(outerClassName)) {
-                violations.add(makeViolation(fullName, outerClassName,
-                        "Outer class name does not follow PascalCase"));
-            }
             return violations;
         }
 
