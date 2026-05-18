@@ -1,0 +1,89 @@
+CSSE 375 Linter - Demo Walkthrough
+==================================
+
+Two demo targets are bundled in demo-targets/:
+
+  linter-self/  - the linter's own compiled bytecode (~85 classes).
+                  Real code, real violations. Good for showing the
+                  tool works on a real codebase.
+
+  fixtures/     - intentionally-broken classes designed to trip
+                  specific checks (EqualsTestClass, IspFailExample,
+                  MethodTooLongPatternFixture, etc.). Good for
+                  showing each check in isolation.
+
+
+Recommended demo sequence (10 minutes)
+--------------------------------------
+
+1) GUI on the fixtures - shows every check firing
+   ------------------------------------------------
+   - Double-click run-gui.bat (or linter.jar)
+   - Click "Browse..." -> select demo-targets\fixtures
+   - Click Run
+   - The summary banner at the top shows e.g.
+       "3 errors  6 warnings  2 info  11 total  ran in 0.45 s"
+   - Open the Results tab, expand each check, point out:
+       * EqualsChecker flagged EqualsTestClass
+       * MethodTooLongPattern flagged MethodTooLongPatternFixture
+       * InterfaceSegregationPrinciple flagged IspFailExample
+       * StrategyPattern / DecoratorPattern / TemplatePattern
+         detected on their respective fixtures
+
+2) GUI on the linter itself - shows real-world output
+   ----------------------------------------------------
+   - Click "Browse..." -> select demo-targets\linter-self
+   - Click Run
+   - Note the banner counts climb; the linter has its own intentional
+     code smells (we know, we're fixing them in M4)
+   - Try the severity filter dropdown and the search box on the
+     Results tab; talk briefly about the ViolationFilter extraction
+
+3) Load a JSON config that disables a check
+   -----------------------------------------
+   - Click "Load config..." -> select sample-config.json
+   - You'll see a confirmation dialog
+   - Click Run again on the same target
+   - The EqualsChecker results are gone; the message is loaded from
+     data-layer parsing, exactly per the layered-architecture rule
+
+4) Error handling (optional, ~30 sec)
+   -----------------------------------
+   - Try Load config... on README.txt instead of a .json file
+   - You get a clear "Invalid config file" error dialog, NOT a crash
+
+5) CLI demo (1 min)
+   ------------------
+   Open a terminal in this folder (right-click empty space ->
+   "Open in Terminal"), then run:
+
+     run-cli.bat .\demo-targets\fixtures
+     echo Exit: %ERRORLEVEL%        # -> 1 (violations found)
+
+     run-cli.bat .\demo-targets\fixtures --only pattern
+     run-cli.bat .\demo-targets\fixtures --config sample-config.json
+
+     run-cli.bat                    # no args -> usage error
+     echo Exit: %ERRORLEVEL%        # -> 2
+
+
+Folder layout summary
+---------------------
+  Lint\
+    README.txt                                      <- general how-to
+    DEMO.txt                                        <- this file
+    LinterProject-1.0-rc3-jar-with-dependencies.jar <- the app
+    run-gui.bat / run-gui.sh                        <- GUI launchers
+    run-cli.bat                                     <- CLI launcher
+    sample-config.json                              <- demo config
+    demo-targets\
+      linter-self\                                  <- 85 .class files
+      fixtures\                                     <- 36 .class files
+
+
+Notes
+-----
+- All paths above are relative to the Lint\ folder, so the demo works
+  no matter what drive letter the USB gets mounted as.
+- Requires Java 17 or newer on the host machine. Check with:
+    java -version

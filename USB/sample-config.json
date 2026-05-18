@@ -1,0 +1,7 @@
+{
+  "defaultEnabled": true,
+  "checks": {
+    "EqualsChecker":        { "enabled": false },
+    "MethodTooLongPattern": { "enabled": true, "options": { "threshold": "20" } }
+  }
+}
