@@ -1,0 +1,89 @@
+Journal at Google Docs: https://docs.google.com/document/d/1NY1EIUNW92lz9fTsv9sLKL0AhtTPAreL6wKi1QAvqzc/edit?usp=sharing
+
+April 8, 2026
+spent evening with chapters 6, 22, and 25. Big shift in my head: refactoring for testing is mainly about breaking a dependency you can't fake without it. 
+walked through LinterGuiFrame.onRun() looking for seams. ASM project conversion is built inside SwingWorker. If I want to test run pipeline without a real disk, I need a way to swap that out. Asked AI where a seam could go so analysis pipeline can be tested without running Swing. 
+suggested Parameterize Constructor on a new service class. Clicked instantly. I'd been thinking about subclass-and-override, which would have worked but is more invasive. 
+
+April 10, 2026 
+the "sensing vs separation" idea keeps slipping out of my head, so I wrote it down. For LinterGuiFrame.onRun(), what I actually need is separation. Parameterize Constructor is the lightest version, subclass and override is heavier but more flexible and works without changing the production code at all if the class is non-final. Decided I'll do both on the new service class so I can demonstrate two Ch. 25 techniques from  same place.
+
+April 12, 2026 sketched LinterService design
+a LinterService with a run(Request) → Response shape, where Request bundles the project path plus the lists of checks to run, and Response holds the result and the formatted output text. Java records for both. Two constructors on the service: one that wires up the real ASM converter, and one that takes a function so tests can swap it
+leaving the class non-final so tests can also subclass and override if they want. Two seams from the same class.
+
+April 13, 2026 
+tried sketching LinterService as an interface plus implementation pair. Got 30 minutes in and realized the extra interface wasn't buying anything.  there's only one real implementation, and tests don't need to swap it; they need to swap the project loader inside it. Backed out. 
+
+April 15, 2026 — Refactoring 8 design (CheckCatalog)
+checkCatalog.toDescriptor() is like around 46 lines of nested reflection. Classic Long Method, classic Ch. 22 case. Worked out the substeps mentally. Each one is independently nameable, so each becomes its own private method.
+wrote the test plan first to follow TDD taught in 376
+
+April 16, 2026
+worked out what fixture classes would let me test discovery without scanning the whole classpath: a concrete subclass of Cursory for the positive case, the abstract base classes themselves for the rejection path, and something that implements LintCheck directly
+realized the helpers need to take a Class<?> parameter directly, not a class name, so tests can avoid scanning. That changed my Extract Method substep list
+April 17, 2026 — Q3 exploratory testing
+Ran the GUI on the linter project's own compiled output. The "show checks with 0 issues" toggle works, but if you toggle it while a search is also active, the result counts in the header don't update. The raw text report and the accordion disagree about the order of violations within a check 
+also tried running the linter on a different project's compiled output to see what it would say about unfamiliar code. The Hollywood Principle check fired where I'd expect it to. Pascal-case checking flagged a couple of inner-class names that ASM reports differently
+
+April 22, 2026 — Refactoring 7 + Feature 3
+Created LinterService with the Request/Response records and the swappable project loader. Left it non-final. Updated RunLinterWorker to delegate to the service. first test run blew up with an IllegalAccessException, turned out the test was in the unit package and the exit-code constants were package-private, easy fix
+stub pattern: "a service that records every Request and returns a canned Response." Wanted to make sure I wasn't inventing my own pattern when there's a standard one.
+
+April 23, 2026 - refactoring 8 and 9
+tests caught a subtle bug, which was typo in isRejectedBaseClass that excluded HollywoodPrinciple, but accidentally also excluded HollywoodInstantiationPrinciple because of a startsWith check. The "all-three-Hollywood-subtypes-are-discovered" test turned red and I caught it. 
+For ResultsAccordionPanel: the original 315-line class mixed three responsibilities. Split it into ViolationFilter, CollapsibleCheckPanel, and a much smaller ResultsAccordionPanel.
+got bitten once mid-extraction. I'd moved the filter logic to ViolationFilter but left the call sites referencing the old inner-class method. Compile errors all in one file. 
+April 24, 2026 - refactoring and feature, and one hour feature
+Pulled JsonReportWriter out of LinterGuiFrame.  
+for JSON config loader, architectural question was where to put it. My first instinct was to make it a domain concept since checks consume it. After about 20 minutes of going in circles I re-read rule: domain layer should consume a plain config object/interface, it should not know config came from JSON 
+circular thinking went: "checks consume config → checks live in domain → therefore config lives in domain → therefore JSON loader lives in domain → but JSON parsing is infrastructure → ..." until I noticed I'd put LinterConfig in domain on paper but parser in data package, which would have flipped dependency direction that i want 
+For the one-hour visible feature, landed on a one-line banner at the top of the results pane showing severity counts and timing. Built it as a small pure formatter instead of stuffing logic into onRunCompleted, so sprout class for feathers
+April 26, 2026 — Mock harness, performance, security
+Updated the architecture diagram to match what actually got built. Pulled out a few classes that never landed and the old domain-layer config loader shape. Added the new ones.
+Built MockGuiHarness and UseCaseDriverTest. This is the "develop a mock using AI" deliverable, so I let the AI draft the harness shape and the 9 use cases first. Worked on the first try except for one real bug caught by the IDE
+Had Ai help me with drafting but . Wouldn't trust it without compiling.
+Q4 performance: three timed tests with generous budgets (30 seconds for a full self-scan). Point is to fail on real regressions, not on a busy laptop. 
+Q4 security: nine hostile-input tests. Interesting one was a self-discovery. Schema requires a boolean for enabled, but I didn't have a test that "enabled": "true" (string) gets rejected. Wrote it expecting it to fail
+
+
+April 30, 2026
+installation-guide.md. four install paths, three deployment options. uninstall is "delete the jar"
+
+May 3, 2026
+user-guide.md + getting-started.md. getting-started boils it down to "do you have java?" then "run this". the kind of thing I'd hand a stranger
+
+May 5, 2026 — HTML report sprout
+JSON report works but the GUI doesn't render it nicely. Built HtmlReportWriter as a pure function. Inline CSS, no JS. Wired a "View HTML report" button in the bottom bar that writes a temp file and opens default browser. 11 unit tests including hostile input like class names with angle brackets
+
+May 10, 2026 — M4 fix sweep
+4 Trello bugs. two fixed, two closed.
+- PascalClassName inner-class false positive: regression test loads Outer$Inner fixture, fixed check to strip $<id>?<name> before validating
+- "Use default output": dialog does fire. wording was vague. rephrased
+- header counts on filter-toggle + active search: couldn't reproduce. closed
+- accordion vs raw-report ordering: too risky this late. filed for next cycle
+
+May 12, 2026
+copied USB bundle to a flash drive, ran on a borrowed laptop. worked first try. wanted that done before the demo
+
+May 14, 2026 - demo video
+recorded the demo. GUI, CLI, error handling, security tests, then USB on the second machine. ~9 min. one retake because I forgot to show the HTML report
+
+May 16, 2026 — User testing session #1 (Terrell Doxie, CSSE 374)
+Terrell hasn't taken 375. No ASM background, has written Java. Good cold-eye perspective.
+
+Asked them to lint a small project. They opened a terminal and ran run-cli.bat with no args, expecting help text or something to come up. Got exit code 2. "OK so it just... doesn't work?"
+
+Walked them through it after letting them sit. They tried again with the path argument and it worked.
+
+Action: filed --list-checks for backlog. CI-gating wants exit-2-on-no-args so behavior shouldn't change. Added "common commands" to USB README for now.
+
+Also had them try a malformed config. Dialog wording was clear, fixed and reloaded without help.
+
+May 17, 2026 — User testing session #2 (Hollin Glaze, CSSE 375)
+Hollin took 375. Knows the project shape but hasn't actually used the linter.
+
+Wrote a config file freehand. Forgot to quote the keys. Got the "Invalid config file" dialog. Read the message, fixed the JSON, reloaded. No code change needed, dialog did its job.
+
+Mid-run pause: Hollin wasn't sure the run had started. The banner does flip to "Running..." but Hollin didn't notice. Checked the code, it's working. Note for later — banner could be more visible.
+
