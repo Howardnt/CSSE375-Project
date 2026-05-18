@@ -199,13 +199,11 @@ These flags can be combined.
 
 ---
 
-> **[Screenshot — completed Adoptium install wizard with "Set
-> JAVA_HOME" and "Add to PATH" boxes ticked]** *Suggested filename:
-> `docs/screenshots/install-temurin.png`.*
+![Adoptium Temurin install wizard with PATH and JAVA_HOME options](screenshots/install-temurin.png)
+*Figure 7 — Adoptium Temurin install wizard. Ensure "Set JAVA_HOME" and "Add to PATH" are checked.*
 
-> **[Screenshot — terminal output of `java -version` showing a
-> 17+ release]** *Suggested filename:
-> `docs/screenshots/install-java-version.png`.*
+![Terminal output of java -version](screenshots/install-java-version.png)
+*Figure 8 — `java -version` output confirming a Java 17+ runtime is on PATH.*
 
 ## 5. Verifying the install
 
@@ -244,9 +242,8 @@ USB bundle). You should see a wall of violations and exit code 1.
 
 ---
 
-> **[Screenshot — File Explorer view of the USB bundle showing the
-> 7 expected files and `demo-targets/` subfolder]** *Suggested
-> filename: `docs/screenshots/usb-layout.png`.*
+![File Explorer view of the portable USB bundle](screenshots/usb-layout.png)
+*Figure 9 — Portable USB bundle layout: jar, launcher scripts, demo targets, and README.*
 
 ## 7. Uninstalling
 

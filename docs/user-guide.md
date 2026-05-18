@@ -31,9 +31,8 @@ It does **not**:
 
 ## 2. The GUI
 
-> **[Screenshot 1 — Main window at idle, with `Ready.` in the banner]**
-> *Add a screenshot of the linter GUI right after launch, before any
-> Run, here. Suggested filename: `docs/screenshots/gui-idle.png`.*
+![GUI at idle, with the Ready banner](screenshots/gui-idle.png)
+*Figure 1 — Linter GUI just after launch.*
 
 ### 2.1 Layout
 
@@ -59,9 +58,8 @@ It does **not**:
 +-------------------------------------------------------------+
 ```
 
-> **[Screenshot 2 — Post-run window, fixtures target, summary banner
-> populated]** *Suggested filename:
-> `docs/screenshots/gui-after-run.png`.*
+![GUI after a run on the fixtures target, summary banner populated](screenshots/gui-after-run.png)
+*Figure 2 — Post-run state with severity counts and run duration in the banner.*
 
 ### 2.2 Basic workflow
 
@@ -91,9 +89,8 @@ The Results tab has a filter bar:
 Filtering is interactive — typing in Search updates the display
 immediately. Empty search and "All" severity is the unfiltered state.
 
-> **[Screenshot 3 — Results tab expanded, showing one check group
-> with violations]** *Suggested filename:
-> `docs/screenshots/gui-results-expanded.png`.*
+![Results tab with one check group expanded](screenshots/gui-results-expanded.png)
+*Figure 3 — Results tab with a check group expanded to show individual violations.*
 
 ### 2.4 Loading a JSON config
 
@@ -115,9 +112,8 @@ Keys can be either the **simple class name** (`EqualsChecker`) or the
 itself defaults to `true`). If the file is malformed, an error dialog
 explains what went wrong and the current selection is unchanged.
 
-> **[Screenshot 4 — "Invalid config file" error dialog]** *Suggested
-> filename: `docs/screenshots/gui-error-dialog.png`. Captures the
-> error-handling demo from §1.6 of the M4 submission.*
+![Invalid config file error dialog](screenshots/gui-error-dialog.png)
+*Figure 4 — Bounded, user-meaningful error dialog when a malformed JSON config is loaded.*
 
 ### 2.5 Exporting JSON
 
@@ -145,17 +141,15 @@ The page is fully self-contained — inline CSS, no external assets,
 no JavaScript — so you can save the file and email it, drop it on
 a network share, or open it offline.
 
-> **[Screenshot 6 — HTML report rendered in a browser, showing
-> colored severity badges and per-check tables]** *Suggested
-> filename: `docs/screenshots/html-report.png`.*
+![HTML report rendered in a browser](screenshots/html-report.png)
+*Figure 6 — HTML report rendered in the user's default browser after clicking "View HTML report". Self-contained: inline CSS, no JavaScript, no external assets.*
 
 ---
 
 ## 3. The CLI
 
-> **[Screenshot 5 — CLI output: `LinterCLI demo-targets/fixtures`
-> printing a wall of violations and the exit code]** *Suggested
-> filename: `docs/screenshots/cli-run.png`.*
+![CLI terminal output running on the fixtures target](screenshots/cli-run.png)
+*Figure 5 — Headless CLI output: violations printed to stdout, followed by the exit code.*
 
 For headless / CI use:
 
